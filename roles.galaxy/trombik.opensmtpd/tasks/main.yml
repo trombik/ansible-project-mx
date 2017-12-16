@@ -1,0 +1,122 @@
+---
+# tasks file for ansible-role-opensmtpd
+
+# XXX when using opensmtpd_tables, always use:
+#
+# no_log: "{{ item['no_log'] | default('yes') }}"
+#
+# because the table might contain secrets
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Assert opensmtpd_virtual_user has mandatory keys
+  assert:
+    that:
+      - "'name' in opensmtpd_virtual_user"
+      - opensmtpd_virtual_user.name | length > 0
+      - "'group' in opensmtpd_virtual_user"
+      - opensmtpd_virtual_user.group | length > 0
+      - "'home' in opensmtpd_virtual_user"
+      - opensmtpd_virtual_user.home | length > 0
+  when:
+    - opensmtpd_virtual_user is defined
+
+- name: Assert items in opensmtpd_tables have mandatory keys
+  assert:
+    that:
+      - "'name' in item"
+      - "'path' in item"
+      - "'type' in item"
+      - "'values' in item"
+      - item['name'] | length > 0
+      - item['path'] | length > 0
+      - item['type'] == 'file' or item['type'] == 'db'
+  no_log: "{{ item['no_log'] | default('yes') }}"
+  with_items: "{{ opensmtpd_tables }}"
+  when:
+    - opensmtpd_tables | length > 0
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Add opensmtpd user to opensmtpd_extra_groups
+  user:
+    name: "{{ opensmtpd_user }}"
+    append: yes
+    groups: "{{ opensmtpd_extra_groups }}"
+
+- name: Create opensmtpd_conf_dir
+  file:
+    dest: "{{ opensmtpd_conf_dir }}"
+    state: directory
+
+- name: Create a primary group for opensmtpd_virtual_user
+  group:
+    gid: "{{ opensmtpd_virtual_user.gid | default(omit) }}"
+    name: "{{ opensmtpd_virtual_user.group }}"
+    state: present
+  when:
+    - opensmtpd_virtual_user is defined
+
+- name: Create opensmtpd_virtual_user
+  user:
+    comment: "{{ opensmtpd_virtual_user.comment | default(omit) }}"
+    createhome: yes
+    group: "{{ opensmtpd_virtual_user.group }}"
+    groups: "{{ opensmtpd_virtual_user.groups | default(omit) }}"
+    home: "{{ opensmtpd_virtual_user.home }}"
+    name: "{{ opensmtpd_virtual_user.name }}"
+    state: present
+    shell: /sbin/nologin
+    uid: "{{ opensmtpd_virtual_user.uid | default(omit) }}"
+  when:
+    - opensmtpd_virtual_user is defined
+
+- name: Create opensmtpd_tables
+  template:
+    src: table.j2
+    dest: "{{ item.path }}"
+    owner: "{{ item.owner | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    mode: "{{ item.mode | default(omit) }}"
+  no_log: "{{ item.no_log | default('yes') }}"
+  with_items: "{{ opensmtpd_tables }}"
+  register: __register_opensmtpd_tables
+
+- name: Update db tables for smtpd
+  # XXX this cannot be a hanldler because:
+  # * the mapped database files must be created before smtpd(8) checks
+  # smtpd.conf(5)'s syntax
+  # * flashing handlers is the last option
+  command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if \"'format' in item\" %} -t {{ item.format }}{% endif %} {{ item.path }}"
+  with_items: "{{ __register_opensmtpd_tables.results | selectattr('changed') | map(attribute='item') | list }}"
+  no_log: "{{ item.no_log | default('yes') }}"
+  when:
+    - "'type' in item"
+    - "item.type == 'db'"
+
+- name: See if database files have been created
+  command: "test -f {{ item.path }}.db"
+  failed_when: false
+  changed_when: false
+  register: __register_opensmtpd_database_files
+  no_log: "{{ item.no_log | default('yes') }}"
+  with_items: "{{ opensmtpd_tables | selectattr('type', 'equalto', 'db') | list }}"
+
+- name: Create database files if not exist
+  # XXX makemap.c defines T_PLAIN in enum output_type, but getopt in it does
+  # not accept `-t plain`. enclose it with `if`
+  command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if \"'format' in item\" %} -t {{ item.format }}{% endif %} {{ item.path }}"
+  no_log: "{{ item.no_log | default('yes') }}"
+  with_items: "{{ __register_opensmtpd_database_files.results | selectattr('rc', 'equalto', 1) | map(attribute='item') | list }}"
+
+- name: Create smtpd.conf(5)
+  template:
+    src: smtpd.conf.j2
+    dest: "{{ opensmtpd_conf_file }}"
+    validate: smtpd -n -f %s
+  notify: Restart opensmtpd
+
+- name: Start opensmtpd
+  service:
+    name: "{{ opensmtpd_service }}"
+    state: started

@@ -1,0 +1,20 @@
+---
+- hosts:
+  - virtualbox-mx
+  - staging-mx
+  - prod-mx
+  become: yes
+  become_method: sudo
+  remote_user: ec2-user
+  environment:
+    http_proxy: "{{ http_proxy | default() }}"
+    https_proxy: "{{ https_proxy | default() }}"
+    no_proxy: "{{ no_proxy | default() }}"
+  pre_tasks:
+    - debug: var=hostvars[inventory_hostname]
+  roles:
+    - trombik.hostname
+    - trombik.zsh
+    - trombik.vim
+    - trombik.x509-certificate
+    - trombik.opensmtpd

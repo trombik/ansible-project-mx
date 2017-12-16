@@ -1,0 +1,13 @@
+---
+- name: trombik.vim
+  version: 1.1.1
+- name: trombik.zsh
+  version: 1.1.1
+- name: trombik.hostname
+  version: 1.0.1
+- name: trombik.hosts
+  version: 1.2.1
+- name: trombik.opensmtpd
+  version: 1.2.0
+- name: trombik.x509-certificate
+  version: 1.1.1
