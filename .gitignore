@@ -1,0 +1,8 @@
+/vendor/
+/.vagrant/
+/.kitchen/
+/.bundle/
+Gemfile.lock
+*.retry
+*.swp
+*.pyc
