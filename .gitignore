@@ -5,3 +5,5 @@
 *.retry
 *.swp
 *.pyc
+/.terraform/
+/terraform.*
