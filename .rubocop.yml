@@ -10,6 +10,7 @@ AllCops:
   DisplayCopNames: true
   ExtraDetails: true
   DisplayStyleGuide: true
+  AllowSymlinksInCacheRootDirectory: true
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
