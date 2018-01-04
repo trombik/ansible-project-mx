@@ -5,3 +5,6 @@
 *.retry
 *.swp
 *.pyc
+/.terraform/
+/terraform.*
+.rspec_status

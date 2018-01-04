@@ -4,7 +4,7 @@
   - staging-mx
   - prod-mx
   become: yes
-  become_method: sudo
+  become_method: "{% if 'virtualbox' in group_names %}sudo{% else %}doas{% endif %}"
   remote_user: ec2-user
   environment:
     http_proxy: "{{ http_proxy | default() }}"
