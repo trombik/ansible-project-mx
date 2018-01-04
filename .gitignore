@@ -7,3 +7,4 @@
 *.pyc
 /.terraform/
 /terraform.*
+.rspec_status
