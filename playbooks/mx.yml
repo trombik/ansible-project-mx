@@ -17,4 +17,6 @@
     - trombik.zsh
     - trombik.vim
     - trombik.x509-certificate
+    - create_extra_groups
     - trombik.opensmtpd
+    - trombik.dovecot

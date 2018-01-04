@@ -1,12 +1,13 @@
 ---
+# opensmtpd
 opensmtpd_virtual_user:
   name: vmail
   group: vmail
   home: /var/vmail
   comment: Virtual Mail User
 opensmtpd_tables:
-  - name: secrets
-    path: "{{ opensmtpd_conf_dir }}/secrets"
+  - name: passwd
+    path: "{{ opensmtpd_conf_dir }}/passwd"
     type: file
     owner: root
     group: "{{ opensmtpd_group }}"
@@ -42,11 +43,73 @@ opensmtpd_config: |
   {% endfor %}
   {% for address in ansible_all_ipv4_addresses %}
   listen on {{ address }} port 25
-  listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <secrets> hostname {{ ansible_fqdn }} received-auth
+  listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
 
   accept authenticated for any relay
   accept from any for domain <domains> virtual <virtuals> deliver to maildir "{{ opensmtpd_virtual_user.home }}/%{dest.domain}/%{dest.user}/Maildir"
+opensmtpd_extra_groups:
+  - vmailauth
+opensmtpd_virtual_user:
+  name: vmail
+  group: vmail
+  home: /var/vmail
+  comment: Virtual Mail User
+
+# dovecot
+dovecot_extra_groups:
+  - vmailauth
+dovecot_flags: ""
+dovecot_config: |
+  protocols = imap
+  listen = *
+  base_dir = "{{ dovecot_base_dir }}"
+  {% for i in dovecot_config_fragments %}
+  {% if i.state == 'present' %}
+  !include {{ dovecot_confd_dir }}/{{ i.name }}
+  {% endif %}
+  {% endfor %}
+dovecot_config_fragments:
+  - name: logging.conf
+    state: present
+    content: |
+      auth_verbose = yes
+      auth_verbose_passwords = plain
+      auth_debug = yes
+      auth_debug_passwords = yes
+  - name: main.conf
+    state: present
+    content: |
+      service imap-login {
+        inet_listener imap {
+          # disable plain-text IMAP completely
+          port = 0
+        }
+        inet_listener imaps {
+          port = 993
+        }
+      }
+      disable_plaintext_auth = yes
+  - name: ssl.conf
+    state: present
+    content: |
+      ssl = required
+      ssl_cert = <{{ x509_certificate_dir }}/{{ ansible_fqdn }}.crt
+      ssl_key = <{{ x509_certificate_dir }}/{{ ansible_fqdn }}.key
+      ssl_cipher_list = ALL:!LOW:!SSLv2:!EXP:!aNULL
+      verbose_ssl = yes
+  - name: auth.conf
+    state: present
+    content: |
+      disable_plaintext_auth = no
+      passdb {
+        args = scheme=blf-crypt {{ opensmtpd_conf_dir }}/passwd
+        driver = passwd-file
+      }
+      userdb {
+        args = uid=vmail gid=vmail home=/var/vmail/%d/%n
+        driver = static
+      }
 x509_certificate:
   - name: "{{ ansible_fqdn }}"
     state: present

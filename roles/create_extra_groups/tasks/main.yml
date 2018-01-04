@@ -1,0 +1,6 @@
+---
+
+- name: Create extra group, vmailauth
+  group:
+    name: vmailauth
+    state: present
