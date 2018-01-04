@@ -7,6 +7,7 @@ gem "infrataster", ">= 0.3.2", git: "https://github.com/trombik/infrataster.git"
 gem "infrataster-plugin-firewall", ">= 0.1.4", git: "https://github.com/trombik/infrataster-plugin-firewall.git", branch: "reallyenglish"
 gem "net-ssh", "~> 3.0.2" # surpress "Object#timeout is deprecated, use Timeout.timeout instead" https://github.com/net-ssh/net-ssh/issues/305
 gem "rake", "~> 12.0.0" # workaround an issue when ruby version > 2.2 https://github.com/sickill/rainbow/issues/44
+gem "retries", "~> 0.0.5"
 gem "rspec", "~> 3.4.0"
 gem "rspec-retry", "~> 0.5.5"
 gem "rubocop", "~> 0.51.0", require: false
