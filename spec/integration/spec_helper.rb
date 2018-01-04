@@ -1,7 +1,6 @@
 require_relative "../spec_helper"
 require "infrataster/rspec"
 require "infrataster-plugin-firewall"
-require "infrataster-plugin-redis"
 require "ansible/vault"
 
 # XXX `vagrant` command must be called within `with_clean_env`, not only
@@ -55,17 +54,30 @@ def vagrant_status
   out
 end
 
+# Returns ansible-inventory outputs that includes all hosts
+#
+# @return [String] output of `ansible-inventory` as YAML
+def ansible_inventory_list
+  cmd = "ansible-inventory -i inventories/#{test_environment} --yaml --list"
+  out = `#{cmd}`
+  raise "failed to run command `#{cmd}`" unless $CHILD_STATUS.exitstatus.zero?
+  out
+end
+
 # List of vagrant machine names
 #
 # @return [Array<String>] array of vagrant machine names
 def vagrant_machines
-  vagrant_status.split("\n")
-                .select { |l| l.split(",")[2] == "metadata" }
-                .map { |l| l.split(",")[1] }
-end
-
-def es_default_port
-  9200
+  case test_environment
+  when "virtualbox"
+    vagrant_status.split("\n").select { |l| l.split(",")[2] == "metadata" }
+                  .map { |l| l.split(",")[1] }
+  when "staging"
+    hosts = YAML.safe_load(ansible_inventory_list)["all"]["children"]["ec2"]["hosts"]
+    hosts.keys.map { |k| hosts[k]["ec2_tag_Name"] }
+  else
+    raise "unknown test_environment `#{test_environment}`"
+  end
 end
 
 vagrant_machines.each do |server|
@@ -76,7 +88,12 @@ vagrant_machines.each do |server|
     Infrataster::Server.define(
       server.to_sym,
       inventory.host(server)["ansible_host"],
-      vagrant: true
+      vagrant: case test_environment
+               when "virtualbox"
+                 true
+               else
+                 false
+               end
     )
   end
 end

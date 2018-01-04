@@ -2,9 +2,10 @@ require "English"
 require "rspec/retry"
 require "net/ssh"
 require "pathname"
-require "ansible/inventory/yaml"
 require "vagrant/serverspec"
 require "vagrant/ssh/config"
+$LOAD_PATH.unshift(Pathname.new(File.dirname(__FILE__)).parent + "ruby" + "lib")
+require "ansible_inventory"
 
 ENV["LANG"] = "C"
 
@@ -30,16 +31,16 @@ end
 
 # Returns inventory object
 #
-# @return [Ansible::Inventory::YAML]
+# @return [AnsibleInventory]
 def inventory
-  Ansible::Inventory::YAML.new(inventory_file)
+  AnsibleInventory.new(inventory_path)
 end
 
 # Returns path to inventory file
 #
 # @return [String]
-def inventory_file
+def inventory_path
   Pathname.new(__FILE__)
           .parent
-          .parent + "inventories" + test_environment + "#{test_environment}.yml"
+          .parent + "inventories" + test_environment
 end
