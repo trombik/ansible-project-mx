@@ -28,6 +28,15 @@ all_hosts_in("mx").each do |server|
         expect { smtp.mailfrom(user) }.not_to raise_exception
         expect { smtp.rcptto("postmaster@trombik.org") }.not_to raise_exception
       end
+
+      it "delivers a message to test user" do
+        skip "the test user does not exist in prod" if test_environment == "prod"
+        expect do
+          smtp.send_message "Subject: Test message\n\nHello World",
+                            "john@trombik.org",
+                            "john@trombik.org"
+        end.not_to raise_exception
+      end
     end
 
     context "when SMTP client is not authenticated" do
