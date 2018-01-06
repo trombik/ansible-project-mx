@@ -77,7 +77,7 @@
 
       {% endfor %}
       listen on em1 port 25
-      listen on em1 port 587 smtps pki a.mx.trombik.org auth <secrets> hostname \\
+      listen on em1 port 587 smtps pki a.mx.trombik.org auth <secrets> hostname \
         a.mx.trombik.org received-auth
 
       accept authenticated for any relay
