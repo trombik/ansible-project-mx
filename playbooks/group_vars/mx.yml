@@ -1,16 +1,17 @@
 ---
+project_vmail_user: vmail
+project_vmail_group: vmail
+project_vmail_root_dir: /var/vmail
+project_vmail_auth_group: vmailauth
 # opensmtpd
-opensmtpd_virtual_user:
-  name: vmail
-  group: vmail
-  home: /var/vmail
-  comment: Virtual Mail User
+opensmtpd_extra_packages:
+  - opensmtpd-extras
 opensmtpd_tables:
   - name: passwd
     path: "{{ opensmtpd_conf_dir }}/passwd"
-    type: file
+    type: passwd
     owner: root
-    group: "{{ opensmtpd_group }}"
+    group: "{{ project_vmail_auth_group }}"
     mode: "0640"
     no_log: yes
     values: "{{ project_virtual_user_credentials }}"
@@ -46,14 +47,14 @@ opensmtpd_config: |
   listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
 
+  accept from any for domain <domains> virtual <virtuals> deliver to lmtp "/var/dovecot/lmtp" rcpt-to
   accept authenticated for any relay
-  accept from any for domain <domains> virtual <virtuals> deliver to maildir "{{ opensmtpd_virtual_user.home }}/%{dest.domain}/%{dest.user}/Maildir"
 opensmtpd_extra_groups:
-  - vmailauth
+  - "{{ project_vmail_auth_group }}"
 opensmtpd_virtual_user:
-  name: vmail
-  group: vmail
-  home: /var/vmail
+  name: "{{ project_vmail_user }}"
+  group: "{{ project_vmail_group }}"
+  home: "{{ project_vmail_root_dir }}"
   comment: Virtual Mail User
 
 # dovecot
@@ -61,7 +62,7 @@ dovecot_extra_groups:
   - vmailauth
 dovecot_flags: ""
 dovecot_config: |
-  protocols = imap
+  protocols = imap lmtp
   listen = *
   base_dir = "{{ dovecot_base_dir }}"
   {% for i in dovecot_config_fragments %}
@@ -74,9 +75,9 @@ dovecot_config_fragments:
     state: present
     content: |
       auth_verbose = yes
-      auth_verbose_passwords = plain
-      auth_debug = yes
-      auth_debug_passwords = yes
+      auth_verbose_passwords = no
+      auth_debug = no
+      auth_debug_passwords = no
   - name: main.conf
     state: present
     content: |
@@ -89,7 +90,50 @@ dovecot_config_fragments:
           port = 993
         }
       }
-      disable_plaintext_auth = yes
+      service auth {
+        user = {{ dovecot_user }}
+        group = {{ project_vmail_auth_group }}
+      }
+      service auth-worker {
+        user = {{ dovecot_user }}
+        group = {{ project_vmail_auth_group }}
+      }
+      service lmtp {
+        unix_listener /var/dovecot/lmtp {
+          user = {{ opensmtpd_virtual_user.name }}
+          group = {{ opensmtpd_virtual_user.group }}
+          mode = 0600
+        }
+      }
+
+      mail_location = maildir:{{ opensmtpd_virtual_user.home }}/%d/%n
+      mail_privileged_group = {{ project_vmail_auth_group }}
+      mmap_disable = yes
+      first_valid_uid = 1000
+      mail_plugin_dir = /usr/local/lib/dovecot
+      mbox_write_locks = fcntl
+
+      namespace inbox {
+        inbox = yes
+        mailbox Drafts {
+          special_use = \Drafts
+        }
+        mailbox Drafts {
+          special_use = \Drafts
+        }
+        mailbox Junk {
+          special_use = \Junk
+        }
+        mailbox Trash {
+          special_use = \Trash
+        }
+        mailbox Sent {
+          special_use = \Sent
+        }
+        mailbox "Sent Messages" {
+          special_use = \Sent
+        }
+      }
   - name: ssl.conf
     state: present
     content: |
@@ -101,13 +145,14 @@ dovecot_config_fragments:
   - name: auth.conf
     state: present
     content: |
-      disable_plaintext_auth = no
+      auth_mechanisms = plain
+      disable_plaintext_auth = yes
       passdb {
         args = scheme=blf-crypt {{ opensmtpd_conf_dir }}/passwd
         driver = passwd-file
       }
       userdb {
-        args = uid=vmail gid=vmail home=/var/vmail/%d/%n
+        args = uid={{ opensmtpd_virtual_user.name }} gid={{ opensmtpd_virtual_user.group }} home={{ project_vmail_root_dir}}/%d/%n
         driver = static
       }
 x509_certificate:
