@@ -12,7 +12,7 @@
       - item.name | length > 0
   with_items: "{{ dovecot_config_fragments }}"
 
-- include: "install-{{ ansible_os_family }}.yml"
+- include_tasks: "install-{{ ansible_os_family }}.yml"
 
 - name: Add dovecot user to dovecot_extra_groups
   user:
@@ -29,6 +29,11 @@
   file:
     path: "{{ dovecot_confd_dir }}"
     state: directory
+
+- name: Include x509_certificate
+  import_role:
+    name: trombik.x509-certificate
+  when: dovecot_include_role_x509_certificate
 
 - name: Create dovecot_config_fragments
   template:
