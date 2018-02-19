@@ -147,7 +147,9 @@ namespace :test do
     case ansible_environment
     when "virtualbox"
       begin
-        vagrant "destroy -f"
+        # XXX use `true` until https://github.com/hashicorp/vagrant/issues/9137 is
+        # fixed.
+        vagrant "destroy -f || true"
       ensure
         sh "rm -f *.vdi"
       end
