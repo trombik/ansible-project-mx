@@ -3,6 +3,11 @@ project_vmail_user: vmail
 project_vmail_group: vmail
 project_vmail_root_dir: /var/vmail
 project_vmail_auth_group: vmailauth
+
+# XXX these should be replaced with values with x509_certificate_dir
+project_certificate_secret: "/etc/ssl/{{ ansible_fqdn }}.key"
+project_certificate_public: "/etc/ssl/{{ ansible_fqdn }}.crt"
+
 # opensmtpd
 opensmtpd_extra_packages:
   - opensmtpd-extras
@@ -35,8 +40,8 @@ opensmtpd_tables:
 
 opensmtpd_flags: -v
 opensmtpd_config: |
-  pki {{ ansible_fqdn }} certificate "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.crt"
-  pki {{ ansible_fqdn }} key "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.key"
+  pki {{ ansible_fqdn }} certificate "{{ project_certificate_public }}"
+  pki {{ ansible_fqdn }} key "{{ project_certificate_secret }}"
 
   {% for table in opensmtpd_tables %}
   table {{ table.name }} {{ table.type }}:{{ table.path }}{% if table['type'] == 'db' %}.db{% endif %}
@@ -57,6 +62,7 @@ opensmtpd_virtual_user:
   home: "{{ project_vmail_root_dir }}"
   comment: Virtual Mail User
 
+opensmtpd_include_x509_certificate: yes
 # dovecot
 dovecot_extra_groups:
   - vmailauth
@@ -138,8 +144,8 @@ dovecot_config_fragments:
     state: present
     content: |
       ssl = required
-      ssl_cert = <{{ x509_certificate_dir }}/{{ ansible_fqdn }}.crt
-      ssl_key = <{{ x509_certificate_dir }}/{{ ansible_fqdn }}.key
+      ssl_cert = <{{ project_certificate_public }}
+      ssl_key = <{{ project_certificate_secret }}
       ssl_cipher_list = ALL:!LOW:!SSLv2:!EXP:!aNULL
       verbose_ssl = yes
   - name: auth.conf
@@ -159,7 +165,7 @@ x509_certificate:
   - name: "{{ ansible_fqdn }}"
     state: present
     secret:
-      path: "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.key"
+      path: "{{ project_certificate_secret }}"
       key: |
         -----BEGIN RSA PRIVATE KEY-----
         MIIJKQIBAAKCAgEAsqn3qdkjpvXn3vWIdPCCwGCQdaPhOxiyR0lVd3HfZOZpUM9u
@@ -213,7 +219,7 @@ x509_certificate:
         MNUO4TmsSHDnBrgFSg/czEg2sH527C4/hLPlIsNqCNKZf/MblRTrsWn823yA
         -----END RSA PRIVATE KEY-----
     public:
-      path: "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.crt"
+      path: "{{ project_certificate_public }}"
       key: |
         -----BEGIN CERTIFICATE-----
         MIIFjTCCA3WgAwIBAgIJAOWEMp5KrvqIMA0GCSqGSIb3DQEBCwUAMF0xCzAJBgNV
