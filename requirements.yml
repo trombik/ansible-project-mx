@@ -8,6 +8,8 @@
 - name: trombik.hosts
   version: 1.2.1
 - name: trombik.opensmtpd
-  version: 1.2.0
+  version: 1.4.0
 - name: trombik.x509-certificate
-  version: 1.1.1
+  version: 1.1.2
+- name: trombik.dovecot
+  version: 1.2.1

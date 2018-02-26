@@ -4,20 +4,19 @@ galaxy_info:
   description: Configures OpenSMTPD
   license: BSD
   company: N/A
-  min_ansible_version: 2.0
+  min_ansible_version: 2.4
   platforms:
   - name: FreeBSD
     versions:
     - 11.1
   - name: OpenBSD
     versions:
-    - 6.0
     - 6.1
-#   - 6.2
-#  - name: Ubuntu
-#    versions:
+    - 6.2
+  - name: Ubuntu
+    versions:
 #    - trusty
-#    - xenial
+    - xenial
 #  - name: EL
 #    versions:
 #    - 7

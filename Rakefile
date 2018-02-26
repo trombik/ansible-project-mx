@@ -56,6 +56,8 @@ def plan_path
   "terraform/plans/#{ansible_environment}"
 end
 
+puts "ANSIBLE_ENVIRONMENT: #{ansible_environment}"
+
 desc "launch VMs"
 task :up do
   case ansible_environment
@@ -147,7 +149,9 @@ namespace :test do
     case ansible_environment
     when "virtualbox"
       begin
-        vagrant "destroy -f"
+        # XXX use `true` until https://github.com/hashicorp/vagrant/issues/9137 is
+        # fixed.
+        vagrant "destroy -f || true"
       ensure
         sh "rm -f *.vdi"
       end

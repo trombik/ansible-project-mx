@@ -30,13 +30,23 @@
       - "'values' in item"
       - item['name'] | length > 0
       - item['path'] | length > 0
-      - item['type'] == 'file' or item['type'] == 'db'
   no_log: "{{ item['no_log'] | default('yes') }}"
   with_items: "{{ opensmtpd_tables }}"
   when:
     - opensmtpd_tables | length > 0
 
-- include: "install-{{ ansible_os_family }}.yml"
+- include_tasks: "install-{{ ansible_os_family }}.yml"
+
+- include_role:
+    name: trombik.x509-certificate
+  when:
+    - opensmtpd_include_x509_certificate
+
+- name: Create opensmtpd_conf_dir
+  file:
+    path: "{{ opensmtpd_conf_dir }}"
+    state: directory
+    mode: 0755
 
 - name: Add opensmtpd user to opensmtpd_extra_groups
   user:
@@ -87,7 +97,7 @@
   # * the mapped database files must be created before smtpd(8) checks
   # smtpd.conf(5)'s syntax
   # * flashing handlers is the last option
-  command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if \"'format' in item\" %} -t {{ item.format }}{% endif %} {{ item.path }}"
+  command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if 'format' in item %} -t {{ item.format }}{% endif %} {{ item.path }}"
   with_items: "{{ __register_opensmtpd_tables.results | selectattr('changed') | map(attribute='item') | list }}"
   no_log: "{{ item.no_log | default('yes') }}"
   when:
@@ -105,7 +115,7 @@
 - name: Create database files if not exist
   # XXX makemap.c defines T_PLAIN in enum output_type, but getopt in it does
   # not accept `-t plain`. enclose it with `if`
-  command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if \"'format' in item\" %} -t {{ item.format }}{% endif %} {{ item.path }}"
+  command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if 'format' in item %} -t {{ item.format }}{% endif %} {{ item.path }}"
   no_log: "{{ item.no_log | default('yes') }}"
   with_items: "{{ __register_opensmtpd_database_files.results | selectattr('rc', 'equalto', 1) | map(attribute='item') | list }}"
 
@@ -120,3 +130,13 @@
   service:
     name: "{{ opensmtpd_service }}"
     state: started
+
+- name: Notify the daemon when file tables has been updated
+  # XXX this task is here to make sure the command is invoked while the daemon
+  # is running
+  command: "smtpctl update table {{ item.name }}"
+  with_items: "{{ __register_opensmtpd_tables.results | selectattr('changed') | map(attribute='item') | list }}"
+  no_log: "{{ item.no_log | default('yes') }}"
+  when:
+    - "'type' in item"
+    - "item.type == 'file'"

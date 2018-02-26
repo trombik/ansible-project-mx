@@ -1,15 +1,22 @@
 ---
-opensmtpd_virtual_user:
-  name: vmail
-  group: vmail
-  home: /var/vmail
-  comment: Virtual Mail User
+project_vmail_user: vmail
+project_vmail_group: vmail
+project_vmail_root_dir: /var/vmail
+project_vmail_auth_group: vmailauth
+
+# XXX these should be replaced with values with x509_certificate_dir
+project_certificate_secret: "/etc/ssl/{{ ansible_fqdn }}.key"
+project_certificate_public: "/etc/ssl/{{ ansible_fqdn }}.crt"
+
+# opensmtpd
+opensmtpd_extra_packages:
+  - opensmtpd-extras
 opensmtpd_tables:
-  - name: secrets
-    path: "{{ opensmtpd_conf_dir }}/secrets"
-    type: file
+  - name: passwd
+    path: "{{ opensmtpd_conf_dir }}/passwd"
+    type: passwd
     owner: root
-    group: "{{ opensmtpd_group }}"
+    group: "{{ project_vmail_auth_group }}"
     mode: "0640"
     no_log: yes
     values: "{{ project_virtual_user_credentials }}"
@@ -33,8 +40,8 @@ opensmtpd_tables:
 
 opensmtpd_flags: -v
 opensmtpd_config: |
-  pki {{ ansible_fqdn }} certificate "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.crt"
-  pki {{ ansible_fqdn }} key "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.key"
+  pki {{ ansible_fqdn }} certificate "{{ project_certificate_public }}"
+  pki {{ ansible_fqdn }} key "{{ project_certificate_secret }}"
 
   {% for table in opensmtpd_tables %}
   table {{ table.name }} {{ table.type }}:{{ table.path }}{% if table['type'] == 'db' %}.db{% endif %}
@@ -42,16 +49,123 @@ opensmtpd_config: |
   {% endfor %}
   {% for address in ansible_all_ipv4_addresses %}
   listen on {{ address }} port 25
-  listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <secrets> hostname {{ ansible_fqdn }} received-auth
+  listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
 
+  accept from any for domain <domains> virtual <virtuals> deliver to lmtp "/var/dovecot/lmtp" rcpt-to
   accept authenticated for any relay
-  accept from any for domain <domains> virtual <virtuals> deliver to maildir "{{ opensmtpd_virtual_user.home }}/%{dest.domain}/%{dest.user}/Maildir"
+opensmtpd_extra_groups:
+  - "{{ project_vmail_auth_group }}"
+opensmtpd_virtual_user:
+  name: "{{ project_vmail_user }}"
+  group: "{{ project_vmail_group }}"
+  home: "{{ project_vmail_root_dir }}"
+  comment: Virtual Mail User
+
+opensmtpd_include_x509_certificate: yes
+# dovecot
+dovecot_extra_groups:
+  - vmailauth
+dovecot_flags: ""
+dovecot_config: |
+  protocols = imap lmtp
+  listen = *
+  base_dir = "{{ dovecot_base_dir }}"
+  {% for i in dovecot_config_fragments %}
+  {% if i.state == 'present' %}
+  !include {{ dovecot_confd_dir }}/{{ i.name }}
+  {% endif %}
+  {% endfor %}
+dovecot_config_fragments:
+  - name: logging.conf
+    state: present
+    content: |
+      auth_verbose = yes
+      auth_verbose_passwords = no
+      auth_debug = no
+      auth_debug_passwords = no
+  - name: main.conf
+    state: present
+    content: |
+      service imap-login {
+        inet_listener imap {
+          # disable plain-text IMAP completely
+          port = 0
+        }
+        inet_listener imaps {
+          port = 993
+        }
+      }
+      service auth {
+        user = {{ dovecot_user }}
+        group = {{ project_vmail_auth_group }}
+      }
+      service auth-worker {
+        user = {{ dovecot_user }}
+        group = {{ project_vmail_auth_group }}
+      }
+      service lmtp {
+        unix_listener /var/dovecot/lmtp {
+          user = {{ opensmtpd_virtual_user.name }}
+          group = {{ opensmtpd_virtual_user.group }}
+          mode = 0600
+        }
+      }
+
+      mail_location = maildir:{{ opensmtpd_virtual_user.home }}/%d/%n
+      mail_privileged_group = {{ project_vmail_auth_group }}
+      mmap_disable = yes
+      first_valid_uid = 1000
+      mail_plugin_dir = /usr/local/lib/dovecot
+      mbox_write_locks = fcntl
+
+      namespace inbox {
+        inbox = yes
+        mailbox Drafts {
+          special_use = \Drafts
+        }
+        mailbox Drafts {
+          special_use = \Drafts
+        }
+        mailbox Junk {
+          special_use = \Junk
+        }
+        mailbox Trash {
+          special_use = \Trash
+        }
+        mailbox Sent {
+          special_use = \Sent
+        }
+        mailbox "Sent Messages" {
+          special_use = \Sent
+        }
+      }
+  - name: ssl.conf
+    state: present
+    content: |
+      ssl = required
+      ssl_cert = <{{ project_certificate_public }}
+      ssl_key = <{{ project_certificate_secret }}
+      ssl_cipher_list = ALL:!LOW:!SSLv2:!EXP:!aNULL
+      verbose_ssl = yes
+  - name: auth.conf
+    state: present
+    content: |
+      auth_mechanisms = plain
+      disable_plaintext_auth = yes
+      passdb {
+        args = scheme=blf-crypt {{ opensmtpd_conf_dir }}/passwd
+        driver = passwd-file
+      }
+      userdb {
+        args = uid={{ opensmtpd_virtual_user.name }} gid={{ opensmtpd_virtual_user.group }} home={{ project_vmail_root_dir}}/%d/%n
+        driver = static
+      }
 x509_certificate:
   - name: "{{ ansible_fqdn }}"
     state: present
     secret:
-      path: "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.key"
+      path: "{{ project_certificate_secret }}"
       key: |
         -----BEGIN RSA PRIVATE KEY-----
         MIIJKQIBAAKCAgEAsqn3qdkjpvXn3vWIdPCCwGCQdaPhOxiyR0lVd3HfZOZpUM9u
@@ -105,7 +219,7 @@ x509_certificate:
         MNUO4TmsSHDnBrgFSg/czEg2sH527C4/hLPlIsNqCNKZf/MblRTrsWn823yA
         -----END RSA PRIVATE KEY-----
     public:
-      path: "{{ x509_certificate_dir }}/{{ ansible_fqdn }}.crt"
+      path: "{{ project_certificate_public }}"
       key: |
         -----BEGIN CERTIFICATE-----
         MIIFjTCCA3WgAwIBAgIJAOWEMp5KrvqIMA0GCSqGSIb3DQEBCwUAMF0xCzAJBgNV

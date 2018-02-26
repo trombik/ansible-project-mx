@@ -6,6 +6,15 @@ describe fqdn do
   it_behaves_like "a host with all basic tools installed"
 end
 
+describe file "/etc/mail/passwd" do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 640 }
+  it { should be_owned_by "root" }
+  it { should be_grouped_into "vmailauth" }
+  its(:content) { should match(/^john@trombik\.org:\$2b\$08\$.*::::::$/) }
+end
+
 describe service "smtpd" do
   it { should be_enabled }
   it { should be_running }

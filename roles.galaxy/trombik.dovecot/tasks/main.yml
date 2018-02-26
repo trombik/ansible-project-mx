@@ -1,0 +1,80 @@
+---
+# tasks file for ansible-role-dovecot
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Assert dovecot_config_fragments has valid items
+  assert:
+    that:
+      - "'state' in item"
+      - "item.state == 'present' or item.state == 'absent'"
+      - "'name' in item"
+      - item.name | length > 0
+  with_items: "{{ dovecot_config_fragments }}"
+
+- include_tasks: "install-{{ ansible_os_family }}.yml"
+
+- name: Add dovecot user to dovecot_extra_groups
+  user:
+    name: "{{ dovecot_user }}"
+    append: yes
+    groups: "{{ dovecot_extra_groups }}"
+
+- name: Create conf directory
+  file:
+    path: "{{ dovecot_conf_dir }}"
+    state: directory
+
+- name: Create conf.d directory
+  file:
+    path: "{{ dovecot_confd_dir }}"
+    state: directory
+
+- name: Include x509_certificate
+  import_role:
+    name: trombik.x509-certificate
+  when: dovecot_include_role_x509_certificate
+
+- name: Create dovecot_config_fragments
+  template:
+    dest: "{{ dovecot_confd_dir }}/{{ item.name }}"
+    src: fragment.j2
+    mode: "{{ item.mode | default(omit) }}"
+    owner: "{{ item.owner | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+  when: item.state == 'present'
+  with_items: "{{ dovecot_config_fragments }}"
+  notify:
+    - Restart dovecot
+
+- name: Delete dovecot_config_fragments
+  file:
+    path: "{{ dovecot_confd_dir }}/{{ item.name }}"
+    state: absent
+  when: item.state == 'absent'
+  with_items: "{{ dovecot_config_fragments }}"
+  notify:
+    - Restart dovecot
+
+- name: Create dovecot.conf
+  template:
+    src: dovecot.conf.j2
+    dest: "{{ dovecot_conf_file }}"
+    validate: doveconf -c %s
+  notify: Restart dovecot
+
+- name: Enable dovecot
+  # XXX FreeBSD port checks dovecot_service file even when running `service
+  # dovecot enabled`. this task cannot be placed before `Create dovecot.conf`
+  # task.
+  service:
+    name: "{{ dovecot_service }}"
+    enabled: yes
+  when:
+    - ansible_os_family == 'FreeBSD'
+
+- name: Start dovecot
+  service:
+    name: "{{ dovecot_service }}"
+    enabled: true
+    state: started

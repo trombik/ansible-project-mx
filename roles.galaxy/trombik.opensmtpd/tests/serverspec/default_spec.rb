@@ -5,7 +5,7 @@ service = "smtpd"
 config_dir = "/etc/mail"
 ports = [25]
 default_user = "root"
-default_group = "wheel"
+default_group = "root"
 user = "_smtpd"
 group = "_smtpd"
 virtual_user = {
@@ -14,28 +14,49 @@ virtual_user = {
   home: "/var/vmail"
 }
 extra_group = ["nobody"]
+packages = []
+passwd_postfix = ":::::"
 
 case os[:family]
+when "ubuntu"
+  config_dir = "/etc"
+  user = "opensmtpd"
+  group = "opensmtpd"
+  extra_group = ["games"]
+  service = "opensmtpd"
+  packages = ["opensmtpd", "opensmtpd-extras"]
+  passwd_postfix = ":12345:12345:::"
 when "freebsd"
   config_dir = "/usr/local/etc/mail"
+  default_group = "wheel"
+  packages = ["opensmtpd", "opensmtpd-extras-table-passwd"]
+when "openbsd"
+  default_group = "wheel"
+  packages = ["opensmtpd-extras"]
 end
 
 config = "#{config_dir}/smtpd.conf"
-
 tables = [
   { path: "#{config_dir}/secrets",
     name: "secrets",
     type: "file",
     mode: 640,
     owner: "root",
-    group: "_smtpd",
+    group: group,
     matches: [/^#{Regexp.escape("john@example.org $2b$08$")}.*$/] },
+  { path: "#{config_dir}/smtpd_passwd",
+    name: "passwd",
+    type: "passwd",
+    mode: 640,
+    owner: "root",
+    group: group,
+    matches: [/^#{Regexp.escape("john@example.org:$2b$08$")}.*#{passwd_postfix}$/] },
   { path: "#{config_dir}/aliases",
     name: "aliases",
     type: "file",
     mode: 644,
-    owner: "root",
-    group: "wheel",
+    owner: default_user,
+    group: default_group,
     matches: [
       /^MAILER-DAEMON: postmaster$/,
       /^foo: error:500 no such user$/,
@@ -71,6 +92,12 @@ tables = [
     ] }
 ]
 
+packages.each do |p|
+  describe package p do
+    it { should be_installed }
+  end
+end
+
 case os[:family]
 when "freebsd"
   describe file("/etc/rc.conf.d/smtpd") do
@@ -93,6 +120,14 @@ when "freebsd"
       its(:content) { should match(/^#{s}_enable='NO'$/) }
     end
   end
+end
+
+describe file(config_dir) do
+  it { should exist }
+  it { should be_directory }
+  it { should be_mode 755 }
+  it { should be_owned_by default_user }
+  it { should be_grouped_into default_group }
 end
 
 describe group(group) do
@@ -167,10 +202,14 @@ describe file(config) do
     path = t[:type] == "db" ? "#{t[:path]}.db" : t[:path]
     its(:content) { should match(/^table #{t[:name]} #{t[:type]}:#{path}$/) }
   end
-  its(:content) { should match(/^listen on lo0 port 25$/) }
-  # rubocop:disable Style/FormatStringToken
+  int_lo = case os[:family]
+           when "ubuntu"
+             "lo"
+           else
+             "lo0"
+           end
+  its(:content) { should match(/^listen on #{int_lo} port 25$/) }
   its(:content) { should match(/^#{Regexp.escape("accept from any for domain <domains> virtual <virtuals> \\")}\n\s+#{Regexp.escape("deliver to maildir \"#{virtual_user[:home]}/%{dest.domain}/%{dest.user}/Maildir\"")}$/) }
-  # rubocop:enable Style/FormatStringToken
 end
 
 case os[:family]
