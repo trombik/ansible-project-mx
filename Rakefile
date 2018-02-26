@@ -56,6 +56,8 @@ def plan_path
   "terraform/plans/#{ansible_environment}"
 end
 
+puts "ANSIBLE_ENVIRONMENT: #{ansible_environment}"
+
 desc "launch VMs"
 task :up do
   case ansible_environment
