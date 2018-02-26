@@ -93,7 +93,11 @@ vagrant_machines.each do |server|
                  true
                else
                  false
-               end
+               end,
+      ssh: case test_environment
+           when "staging"
+             { hostname: inventory.host(server)["ansible_host"], user: "ec2-user" }
+           end
     )
   end
 end
