@@ -13,3 +13,5 @@
   version: 1.1.2
 - name: trombik.dovecot
   version: 1.2.1
+- name: trombik.git
+  version: 1.1.2

@@ -1,0 +1,2 @@
+git_package: "{{ __git_package }}"
+git_additional_packages: []
