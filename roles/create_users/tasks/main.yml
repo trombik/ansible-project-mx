@@ -1,0 +1,72 @@
+---
+
+- name: Assert project_users is defined
+  assert:
+    msg: project_users must be defined, but not
+    that:
+      - project_users is defined
+
+- name: Assert each user has required fields
+  assert:
+    that:
+      - "'password' in item"
+      - "'name' in item"
+      - "'group' in item"
+      - "'groups' in item"
+      - "'comment' in item"
+  with_items: "{{ project_users }}"
+
+- name: Assert each user has password for the platform
+  assert:
+    msg: "user {{ item.name }} does not have password for {{ ansible_os_family }}"
+    that:
+      - ansible_os_family in item.password
+  with_items: "{{ project_users }}"
+
+- name: Create default users
+  user:
+    comment: "{{ item.comment }}"
+    createhome: yes
+    group: "{{ item.group }}"
+    groups: "{{ item.groups }}"
+    name: "{{ item.name }}"
+    password: "{{ item.password[ansible_os_family] }}"
+    state: present
+  with_items: "{{ project_users }}"
+
+- name: Add wheel users to wheel in /etc/groups so that su(1) works when the platform is OpenBSD
+  user:
+    name: "{{ item.name }}"
+    append: yes
+    groups:
+      - wheel
+  with_items: "{{ project_users }}"
+  when:
+    - item.group == 'wheel'
+    - ansible_os_family == 'OpenBSD'
+
+- name: Create authorized_keys for each user if defined
+  authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_public_keys | join('\n') }}"
+  with_items: "{{ project_users }}"
+  when:
+    - "'ssh_public_keys' in item"
+    - item.ssh_public_keys | length > 0
+
+- name: Do getent to generate getent_passwd
+  getent:
+    database: passwd
+    split: ":"
+
+- name: Create sshrc under home directory
+  template:
+    src: sshrc.j2
+    dest: "{{ getent_passwd[item.name][4] }}/.ssh/rc"
+    mode: 0600
+    owner: "{{ item.name }}"
+    group: "{{ item.group }}"
+    validate: sh -n %s
+  with_items: "{{ project_users }}"
+  when:
+    - "'ssh_rc' in item"

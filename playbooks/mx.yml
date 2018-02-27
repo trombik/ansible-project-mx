@@ -17,6 +17,7 @@
     - trombik.zsh
     - trombik.vim
     - trombik.git
+    - create_users
     - create_extra_groups
     - trombik.opensmtpd
     - trombik.dovecot

@@ -4,6 +4,7 @@ fqdn = "mx1.trombik.org"
 
 describe fqdn do
   it_behaves_like "a host with all basic tools installed"
+  it_behaves_like "a host with default users"
 end
 
 describe file "/etc/mail/passwd" do
