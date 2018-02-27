@@ -4,7 +4,8 @@ shared_examples "a host with all basic tools installed" do
     { cmd: "vim", opts: "--version" },
     { name: "zsh", cmd: "zsh", opts: "--version" },
     { name: "sudo", cmd: "sudo", opts: "--version" },
-    { cmd: "tmux", opts: "-c uname" }
+    { cmd: "tmux", opts: "-c uname" },
+    { cmd: "git", opts: "--version" }
   ]
   tools.each do |p|
     if p.key?(:name)

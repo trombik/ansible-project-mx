@@ -1,0 +1,6 @@
+---
+# tasks file for ansible-role-git
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include_tasks: "install-{{ ansible_os_family }}.yml"

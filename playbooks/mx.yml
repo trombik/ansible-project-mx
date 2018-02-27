@@ -16,6 +16,7 @@
     - trombik.hostname
     - trombik.zsh
     - trombik.vim
+    - trombik.git
     - create_extra_groups
     - trombik.opensmtpd
     - trombik.dovecot
