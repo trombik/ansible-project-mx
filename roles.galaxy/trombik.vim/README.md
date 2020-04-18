@@ -23,7 +23,7 @@ None
 
 | Variable | Default |
 |----------|---------|
-| `__vim_package` | `vim-lite` |
+| `__vim_package` | `vim-console` |
 
 ## OpenBSD
 
@@ -44,19 +44,29 @@ None
 # Example Playbook
 
 ```yaml
+---
 - hosts: localhost
   roles:
     - ansible-role-vim
   vars:
     # XXX shells/tcshrc is NOT related to vim at all but is included in
     # vim_additional_packages just for testing purpose
-    vim_additional_packages: "{% if ansible_os_family == 'OpenBSD' %}[ 'vim-spell-uk' ]{% elif ansible_os_family == 'Debian' %}[ 'vim-scripts' ]{% elif ansible_os_family == 'RedHat' %}[ 'protobuf-vim' ]{% elif ansible_os_family == 'FreeBSD' %}[ 'shells/tcshrc' ]{% else %}[]{% endif %}"
+    os_vim_additional_packages:
+      FreeBSD:
+        - shells/tcshrc
+      OpenBSD:
+        - vim-spell-uk
+      Debian:
+        - vim-scripts
+      RedHat:
+        - protobuf-vim
+    vim_additional_packages: "{{ os_vim_additional_packages[ansible_os_family] }}"
 ```
 
 # License
 
 ```
-Copyright (c) 2017 Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
+Copyright (c) 2017 Tomoyuki Sakurai <y@trombik.org>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -73,6 +83,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 # Author Information
 
-Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
+Tomoyuki Sakurai <y@trombik.org>
 
 This README was created by [qansible](https://github.com/trombik/qansible)

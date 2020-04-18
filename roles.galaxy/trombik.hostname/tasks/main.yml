@@ -9,7 +9,7 @@
     that:
       - hostname_fqdn is defined
       - hostname_fqdn != ""
-    
+
 # XXX replace `include` with `include_task` after all platforms have recent
 # version of ansible
 - include: "configure-{{ ansible_os_family }}.yml"
@@ -29,3 +29,4 @@
     msg: "ansible_fqdn (`{{ ansible_fqdn }}`) is not identical with `{{ hostname_fqdn }}` after executing the role. this should not happen and probably is a bug in the role"
     that:
       - ansible_fqdn == hostname_fqdn
+  when: not ansible_check_mode

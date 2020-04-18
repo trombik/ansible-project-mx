@@ -1,3 +1,8 @@
+## Release 1.1.3
+
+* 1cf8ef0 bugfix: QA
+* da52c6e bugfix: QA
+
 ## Release 1.1.2
 
 * 127629f [bugfix] s/include/include_tasks/, supporting ansible 2.4.x (#3)

@@ -1,6 +1,7 @@
+---
 - hosts: localhost
   roles:
-    - reallyenglish.hosts
+    - trombik.hosts
     - ansible-role-hostname
   vars:
     fqdn: fqdn.example.org

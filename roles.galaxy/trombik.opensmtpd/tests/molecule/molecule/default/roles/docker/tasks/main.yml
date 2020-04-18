@@ -1,0 +1,33 @@
+---
+
+- name: "Include variables from {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Install ping(8)
+  package:
+    name: "{{ docker_package_ping }}"
+    state: present
+  when:
+    - ansible_os_family != 'FreeBSD'
+    - ansible_os_family != 'OpenBSD'
+
+- name: Install mail(1)
+  package:
+    name: "{{ docker_package_mail }}"
+    state: present
+  when:
+    - ansible_os_family != 'FreeBSD'
+    - ansible_os_family != 'OpenBSD'
+
+- name: Install ss (for testinfra)
+  package:
+    name: "{{ docker_package_ss }}"
+    state: present
+  when:
+    - ansible_os_family != 'FreeBSD'
+    - ansible_os_family != 'OpenBSD'
+
+
+- name: Create vagrant user
+  user:
+    name: vagrant

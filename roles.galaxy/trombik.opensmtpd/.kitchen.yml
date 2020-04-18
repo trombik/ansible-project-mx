@@ -21,9 +21,9 @@ provisioner:
     - filter_plugins
 
 platforms:
-  - name: freebsd-11.1-amd64
+  - name: freebsd-12.0-amd64
     driver:
-      box: trombik/ansible-freebsd-11.1-amd64
+      box: trombik/ansible-freebsd-12.0-amd64
       box_check_update: false
     driver_config:
       ssh:
@@ -32,37 +32,31 @@ platforms:
       extra_vars:
         ansible_python_interpreter: '/usr/local/bin/python'
 
-  - name: openbsd-6.1-amd64
+  - name: openbsd-6.5-amd64
     driver:
-      box: trombik/ansible-openbsd-6.1-amd64
+      box: trombik/ansible-openbsd-6.5-amd64
       box_check_update: false
     driver_config:
       ssh:
         shell: '/bin/sh'
     provisioner:
       extra_vars:
-        ansible_python_interpreter: '/usr/local/bin/python'
-
-  - name: openbsd-6.2-amd64
-    driver:
-      box: trombik/ansible-openbsd-6.2-amd64
-      box_check_update: false
-    driver_config:
-      ssh:
-        shell: '/bin/sh'
-    provisioner:
-      extra_vars:
-        ansible_python_interpreter: '/usr/local/bin/python'
+        ansible_python_interpreter: '/usr/local/bin/python3'
 
   - name: ubuntu-16.04-amd64
     driver:
       box: trombik/ansible-ubuntu-16.04-amd64
       box_check_update: false
-#
-#  - name: centos-7.3-x86_64
-#    driver:
-#      box: trombik/ansible-centos-7.3-x86_64
-#      box_check_update: false
+
+  - name: ubuntu-18.04-amd64
+    driver:
+      box: trombik/ansible-ubuntu-18.04-amd64
+      box_check_update: false
+
+  - name: centos-7.4-x86_64
+    driver:
+      box: trombik/ansible-centos-7.4-x86_64
+      box_check_update: false
 
 suites:
   - name: default
@@ -80,5 +74,14 @@ suites:
       name: shell
       command: rspec -c -f d -I tests/serverspec tests/serverspec/x509_spec.rb
     includes:
-      - freebsd-11.1-amd64
-      - openbsd-6.2-amd64
+      - freebsd-12.0-amd64
+      - openbsd-6.4-amd64
+  - name: without_virtual_user
+    provisioner:
+      name: ansible_playbook
+      playbook: tests/serverspec/without_virtual_user.yml
+    verifier:
+      name: shell
+      command: rspec -c -f d -I tests/serverspec tests/serverspec/without_virtual_user_spec.rb
+    includes:
+      - freebsd-12.0-amd64

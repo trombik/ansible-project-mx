@@ -33,6 +33,16 @@ when "freebsd"
 when "openbsd"
   default_group = "wheel"
   packages = ["opensmtpd-extras"]
+when "redhat"
+  config_dir = "/etc/opensmtpd"
+  user = "smtpd"
+  group = "smtpd"
+  service = "opensmtpd"
+  passwd_postfix = ":12345:12345:::"
+  packages = ["opensmtpd"]
+  extra_group = ["games"]
+else
+  raise "Unknown os[:family]: `#{os[:family]}`"
 end
 
 config = "#{config_dir}/smtpd.conf"
@@ -94,7 +104,12 @@ tables = [
 
 packages.each do |p|
   describe package p do
-    it { should be_installed }
+    it do
+      if p == "opensmtpd-extras" && os[:family] == "ubuntu" && os[:release].to_f == 14.04
+        pending "the package is not available"
+      end
+      should be_installed
+    end
   end
 end
 
@@ -200,16 +215,32 @@ describe file(config) do
   it { should be_grouped_into default_group }
   tables.each do |t|
     path = t[:type] == "db" ? "#{t[:path]}.db" : t[:path]
-    its(:content) { should match(/^table #{t[:name]} #{t[:type]}:#{path}$/) }
+    its(:content) do
+      if t[:name] == "passwd" && (os[:family] == "ubuntu" || os[:family] == "redhat")
+        pending "#{os[:family]} does not have matched version of opensmtpd-extra"
+      end
+      should match(/^table #{t[:name]} #{t[:type]}:#{path}$/)
+    end
   end
   int_lo = case os[:family]
-           when "ubuntu"
+           when "ubuntu", "redhat"
              "lo"
            else
              "lo0"
            end
   its(:content) { should match(/^listen on #{int_lo} port 25$/) }
-  its(:content) { should match(/^#{Regexp.escape("accept from any for domain <domains> virtual <virtuals> \\")}\n\s+#{Regexp.escape("deliver to maildir \"#{virtual_user[:home]}/%{dest.domain}/%{dest.user}/Maildir\"")}$/) }
+  case os[:family]
+  when "freebsd", "openbsd"
+    # false positives
+    # rubocop:disable Style/FormatStringToken
+    its(:content) { should match(/^#{Regexp.escape('action "local_mail" maildir "/var/vmail/%{dest.domain}/%{dest.user}/Maildir"')}$/) }
+    # rubocop:enable Style/FormatStringToken
+    its(:content) { should match(/^#{Regexp.escape('action "outbound" relay')}$/) }
+  else
+    # rubocop:disable Style/FormatStringToken
+    its(:content) { should match(/^#{Regexp.escape("accept from any for domain <domains> virtual <virtuals> \\")}\n\s+#{Regexp.escape("deliver to maildir \"#{virtual_user[:home]}/%{dest.domain}/%{dest.user}/Maildir\"")}$/) }
+    # rubocop:enable Style/FormatStringToken
+  end
 end
 
 case os[:family]
