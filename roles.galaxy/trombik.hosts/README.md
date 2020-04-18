@@ -1,4 +1,4 @@
-# ansible-role-hosts
+# trombik.hosts
 
 Manages `/etc/hosts`
 

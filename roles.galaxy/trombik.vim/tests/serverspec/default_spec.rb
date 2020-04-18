@@ -14,7 +14,7 @@ when "ubuntu"
 when "openbsd"
   additional_packages = ["vim-spell-uk"]
 when "freebsd"
-  package = "vim-lite"
+  package = "vim-console"
   additional_packages = ["shells/tcshrc"]
 end
 

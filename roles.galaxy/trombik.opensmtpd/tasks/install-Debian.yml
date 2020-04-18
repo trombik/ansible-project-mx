@@ -3,6 +3,20 @@
 - name: Install opensmtpd
   apt:
     name: "{{ opensmtpd_package_name }}"
+  register: __register_opensmtpd_apt
+
+- name: Stop smtpd after initial installation of the package  # noqa 503
+  # XXX debian-family always starts daemon when a package has been installed,
+  # which sometimes causes side-effects during ansible play. teach them to
+  # behave like other distribiutions.
+  #
+  # as practices like this have never been implemented in other roles, it
+  # might cause unexpected side-effects.
+  service:
+    name: "{{ opensmtpd_service }}"
+    state: stopped
+  when:
+    - __register_opensmtpd_apt.changed
 
 - name: Enable opensmtpd
   service:
@@ -11,6 +25,5 @@
 
 - name: Install opensmtpd_extra_packages
   apt:
-    name: "{{ item }}"
+    name: "{{ opensmtpd_extra_packages }}"
     state: present
-  with_items: "{{ opensmtpd_extra_packages }}"

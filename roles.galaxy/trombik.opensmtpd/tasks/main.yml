@@ -7,19 +7,20 @@
 #
 # because the table might contain secrets
 
-- include_vars: "{{ ansible_os_family }}.yml"
+- name: "Include  {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
 
 - name: Assert opensmtpd_virtual_user has mandatory keys
   assert:
     that:
-      - "'name' in opensmtpd_virtual_user"
-      - opensmtpd_virtual_user.name | length > 0
-      - "'group' in opensmtpd_virtual_user"
-      - opensmtpd_virtual_user.group | length > 0
-      - "'home' in opensmtpd_virtual_user"
-      - opensmtpd_virtual_user.home | length > 0
+      - opensmtpd_virtual_user['name'] is defined
+      - opensmtpd_virtual_user['name'] | length > 0
+      - opensmtpd_virtual_user['group'] is defined
+      - opensmtpd_virtual_user['group'] | length > 0
+      - opensmtpd_virtual_user['home'] is defined
+      - opensmtpd_virtual_user['home'] | length > 0
   when:
-    - opensmtpd_virtual_user is defined
+    - opensmtpd_virtual_user | bool
 
 - name: Assert items in opensmtpd_tables have mandatory keys
   assert:
@@ -35,10 +36,11 @@
   when:
     - opensmtpd_tables | length > 0
 
-- include_tasks: "install-{{ ansible_os_family }}.yml"
+- name: Install opensmtpd_package_name
+  include_tasks: "install-{{ ansible_os_family }}.yml"
 
 - include_role:
-    name: trombik.x509-certificate
+    name: trombik.x509_certificate
   when:
     - opensmtpd_include_x509_certificate
 
@@ -65,7 +67,7 @@
     name: "{{ opensmtpd_virtual_user.group }}"
     state: present
   when:
-    - opensmtpd_virtual_user is defined
+    - opensmtpd_virtual_user
 
 - name: Create opensmtpd_virtual_user
   user:
@@ -79,7 +81,7 @@
     shell: /sbin/nologin
     uid: "{{ opensmtpd_virtual_user.uid | default(omit) }}"
   when:
-    - opensmtpd_virtual_user is defined
+    - opensmtpd_virtual_user
 
 - name: Create opensmtpd_tables
   template:
@@ -104,6 +106,17 @@
     - "'type' in item"
     - "item.type == 'db'"
 
+- name: Set mode on opensmtpd_virtual_user['home']
+  file:
+    path: "{{ opensmtpd_virtual_user['home'] }}"
+    mode: "{{ opensmtpd_virtual_user['mode'] }}"
+    state: directory
+  when:
+    - opensmtpd_virtual_user
+    - "'home' in opensmtpd_virtual_user"
+    - "'mode' in opensmtpd_virtual_user"
+
+
 - name: See if database files have been created
   command: "test -f {{ item.path }}.db"
   failed_when: false
@@ -112,7 +125,7 @@
   no_log: "{{ item.no_log | default('yes') }}"
   with_items: "{{ opensmtpd_tables | selectattr('type', 'equalto', 'db') | list }}"
 
-- name: Create database files if not exist
+- name: Create database files if not exist  # noqa 301 (no idea how to avoid the warning)
   # XXX makemap.c defines T_PLAIN in enum output_type, but getopt in it does
   # not accept `-t plain`. enclose it with `if`
   command: "{{ opensmtpd_makemap_bin }} -d {{ item.dbtype | default('hash') }}{% if 'format' in item %} -t {{ item.format }}{% endif %} {{ item.path }}"
@@ -132,11 +145,15 @@
     state: started
 
 - name: Notify the daemon when file tables has been updated
-  # XXX this task is here to make sure the command is invoked while the daemon
-  # is running
-  command: "smtpctl update table {{ item.name }}"
-  with_items: "{{ __register_opensmtpd_tables.results | selectattr('changed') | map(attribute='item') | list }}"
-  no_log: "{{ item.no_log | default('yes') }}"
-  when:
-    - "'type' in item"
-    - "item.type == 'file'"
+  # XXX the triggering task must be executed after `Create smtpd.conf(5)` and
+  # `Start opensmtpd` tasks. the followings are prerequisites:
+  #
+  # - all tables have been created
+  # - smtpd.conf(5) has been created
+  # - smtpd(8) has been reloaded with the latest smtpd.conf(5)
+  #
+  # as such, calling the handler must be placed after `Start opensmtpd` task.
+  debug:
+    msg: Notify the daemon when file tables has been updated
+  notify: Notify the daemon when file tables has been updated
+  changed_when: __register_opensmtpd_tables.results | selectattr('changed') | map(attribute='item') | selectattr('type', 'equalto', 'file') | list | length > 0

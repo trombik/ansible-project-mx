@@ -30,14 +30,20 @@ None
   roles:
     - ansible-role-zsh
   vars:
-    zsh_additional_package:
-      - zsh-navigation-tools
+    os_zsh_additional_packages:
+      OpenBSD: []
+      FreeBSD:
+        - zsh-navigation-tools
+      Debian:
+        - zsh-syntax-highlighting
+      RedHat: zsh-html
+    zsh_additional_packages: "{{ os_zsh_additional_packages }}"
 ```
 
 # License
 
 ```
-Copyright (c) 2017 Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
+Copyright (c) 2020 Tomoyuki Sakurai <y@trombik.org>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -54,6 +60,4 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 # Author Information
 
-Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
-
-This README was created by [qansible](https://github.com/trombik/qansible)
+Tomoyuki Sakurai <y@trombik.org>

@@ -1,3 +1,14 @@
+## Release 2.0.1
+
+* b313b60 bugfix: QA
+
+## Release 2.0.0
+
+Python 2.x has been dropped. If you need python 2.x, use previous version.
+
+* 9eefa07 backward-incompatible: use python3-style iteration
+* 987f533 bugfix: QA
+
 ## Release 1.2.1
 
 * 355106d [bugfix] Update rubocop to the latest (#1)

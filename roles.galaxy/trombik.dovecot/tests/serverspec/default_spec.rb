@@ -2,6 +2,7 @@ require "spec_helper"
 require "serverspec"
 
 package = "dovecot"
+extra_packages = []
 service = "dovecot"
 config_dir = "/etc/dovecot"
 ports = [993]
@@ -18,6 +19,10 @@ when "freebsd"
 when "openbsd"
   default_group = "wheel"
   user = "_dovecot"
+when "ubuntu"
+  package = "dovecot-core"
+  extra_groups = ["nogroup"]
+  extra_packages = ["dovecot-imapd"]
 end
 
 config = "#{config_dir}/dovecot.conf"
@@ -26,6 +31,12 @@ ssl_cert_dir = "#{config_dir}/ssl"
 
 describe package(package) do
   it { should be_installed }
+end
+
+extra_packages.each do |p|
+  describe package p do
+    it { should be_installed }
+  end
 end
 
 describe user(user) do
@@ -92,7 +103,11 @@ describe file(config) do
   it { should be_owned_by default_owner }
   it { should be_grouped_into default_group }
   it { should be_mode 644 }
-  its(:content) { should match(/^protocols = imaps$/) }
+  if os[:family] == "ubuntu"
+    its(:content) { should match(/^protocols = imap$/) }
+  else
+    its(:content) { should match(/^protocols = imaps$/) }
+  end
   its(:content) { should match(/^listen = \*$/) }
   its(:content) { should match(/^base_dir = "#{Regexp.escape(base_dir)}"$/) }
   ["auth.conf"].each do |conf|
@@ -145,10 +160,11 @@ verify return:1
 depth=0 C = TH, ST = Bangkok, O = Internet Widgits Pty Ltd, CN = a.mx.trombik.org
 verify return:1
 DONE\n"
-describe command("echo | openssl s_client -connect localhost:imaps") do
+describe command("(sleep 3 && echo) | openssl s_client -connect localhost:imaps") do
   its(:exit_status) { should eq 0 }
   its(:stderr) { should eq stderr_text }
-  its(:stdout) { should match(/^#{Regexp.escape("* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=PLAIN] Dovecot ready.")}$/) }
+  # OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=PLAIN] Dovecot (Ubuntu) ready.
+  its(:stdout) { should match(/^#{Regexp.escape("* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=PLAIN]")} Dovecot (?:\(Ubuntu\) )?ready\.$/) }
   its(:stdout) { should match(/^#{Regexp.escape("subject=/C=TH/ST=Bangkok/O=Internet Widgits Pty Ltd/CN=a.mx.trombik.org")}$/) }
   its(:stdout) { should match(/^#{Regexp.escape("issuer=/C=TH/ST=Bangkok/O=Internet Widgits Pty Ltd/CN=a.mx.trombik.org")}$/) }
 end

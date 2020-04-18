@@ -38,6 +38,12 @@
   pkgng:
     name: "{{ opensmtpd_package_name }}"
 
+- name: Create /etc/mail/mailer.conf
+  template:
+    # no way to validate the file
+    src: mailer.conf.j2
+    dest: /etc/mail/mailer.conf
+
 - name: Enable opensmtpd
   service:
     name: "{{ opensmtpd_service }}"
@@ -45,6 +51,5 @@
 
 - name: Install opensmtpd_extra_packages
   pkgng:
-    name: "{{ item }}"
+    name: "{{ opensmtpd_extra_packages }}"
     state: present
-  with_items: "{{ opensmtpd_extra_packages }}"
