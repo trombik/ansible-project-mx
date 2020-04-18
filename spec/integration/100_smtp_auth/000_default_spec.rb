@@ -2,9 +2,9 @@ require_relative "../spec_helper"
 require "net/smtp"
 
 all_hosts_in("mx").each do |server|
-  describe server do
+  describe "smtpd on #{server}" do
     let(:smtp) do
-      o = Net::SMTP.new(current_server.address, 587)
+      o = Net::SMTP.new(server.address, 587)
       ctx = OpenSSL::SSL::SSLContext.new
       ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE if test_environment != "prod"
       o.enable_tls(ctx)
@@ -12,38 +12,45 @@ all_hosts_in("mx").each do |server|
     end
     let(:user) { "john@trombik.org" }
     let(:password) { "PassWord" }
+    let(:invalid_user) { "dave.null@trombik.org" }
+    let(:invalid_password) { "foobarbuz" }
 
     after(:each) { smtp.finish if smtp.started? }
 
     context "when SMTP client is authenticated" do
       before(:each) { smtp.start("localhost", user, password, :plain) }
+
       it "accepts message to third-party domain" do
-        skip "the test user does not exist in prod" if test_environment == "prod"
         expect { smtp.mailfrom(user) }.not_to raise_exception
         expect { smtp.rcptto("foo@example.org") }.not_to raise_exception
       end
 
       it "accepts message to our domain" do
-        skip "the test user does not exist in prod" if test_environment == "prod"
         expect { smtp.mailfrom(user) }.not_to raise_exception
         expect { smtp.rcptto("postmaster@trombik.org") }.not_to raise_exception
       end
 
       it "delivers a message to test user" do
-        skip "the test user does not exist in prod" if test_environment == "prod"
         expect do
           smtp.send_message "Subject: Test message\n\nHello World",
-                            "john@trombik.org",
-                            "john@trombik.org"
+                            user,
+                            user
         end.not_to raise_exception
       end
     end
 
-    context "when SMTP client is not authenticated" do
+    context "when SMTP client does not send AUTH first" do
       before(:each) { smtp.start("localhost") }
 
-      it "rejects message without AUTH to third-party domain" do
+      it "raises Net::SMTPAuthenticationError" do
         expect { smtp.mailfrom(user) }.to raise_exception(Net::SMTPAuthenticationError)
+      end
+    end
+
+    context "when SMTP client fails to send correct credential" do
+      it "raises Net::SMTPAuthenticationError" do
+        expect { smtp.start("localhost", invalid_user, invalid_password, :plain).to
+                 raise_exception(Net::SMTPAuthenticationError) }
       end
     end
 
