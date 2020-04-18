@@ -40,7 +40,7 @@ opensmtpd_tables:
 
 opensmtpd_flags: -v
 opensmtpd_config: |
-  pki {{ ansible_fqdn }} certificate "{{ project_certificate_public }}"
+  pki {{ ansible_fqdn }} cert "{{ project_certificate_public }}"
   pki {{ ansible_fqdn }} key "{{ project_certificate_secret }}"
 
   {% for table in opensmtpd_tables %}
@@ -51,9 +51,11 @@ opensmtpd_config: |
   listen on {{ address }} port 25
   listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
+  action "inbound" lmtp "/var/dovecot/lmtp" rcpt-to virtual <virtuals>
+  action "outbound" relay
+  match from any for domain <domains> action "inbound"
+  match auth from any for any action "outbound"
 
-  accept from any for domain <domains> virtual <virtuals> deliver to lmtp "/var/dovecot/lmtp" rcpt-to
-  accept authenticated for any relay
 opensmtpd_extra_groups:
   - "{{ project_vmail_auth_group }}"
 opensmtpd_virtual_user:
