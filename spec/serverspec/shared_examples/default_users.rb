@@ -30,15 +30,13 @@ shared_examples "a host with default users" do
       it { should be_directory }
     end
 
-    if u.key?("ssh_rc")
-      describe file "#{home}/#{u['name']}/.ssh/rc" do
-        it { should exist }
-        it { should be_file }
-        it { should be_owned_by u["name"] }
-      end
+    next unless u.key?("ssh_rc")
+    describe file "#{home}/#{u['name']}/.ssh/rc" do
+      it { should exist }
+      it { should be_file }
+      it { should be_owned_by u["name"] }
     end
   end
-
 
   if os[:platform] == "openbsd"
     u.select { |u| u["group"] == "wheel" }.each do |wheel_user|
