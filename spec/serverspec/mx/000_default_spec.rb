@@ -40,6 +40,5 @@ describe command "(sleep 3; echo helo localhost) | openssl s_client -connect #{e
   its(:stdout) { match(/^CONNECTED.+$/) }
   it "replies with SMTP banner" do
     expect(reply).to match(/^220 #{Regexp.escape(fqdn)} ESMTP OpenSMTPD$/)
-    expect(reply).to match(/^250 #{Regexp.escape(fqdn)} Hello localhost \[\d+\.\d+\.\d+\.\d+\], pleased to meet you$/)
   end
 end
