@@ -8,11 +8,9 @@ describe fqdn do
 end
 
 def virtual_users(file)
-  begin
-    YAML.safe_load(Ansible::Vault.decrypt(file: file))["project_virtual_user_credentials"]
-  rescue RuntimeError
-    YAML.load_file(file)["project_virtual_user_credentials"]
-  end
+  YAML.safe_load(Ansible::Vault.decrypt(file: file))["project_virtual_user_credentials"]
+rescue RuntimeError
+  YAML.load_file(file)["project_virtual_user_credentials"]
 end
 
 describe file "/etc/mail/passwd" do
