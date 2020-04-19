@@ -6,8 +6,7 @@ require "rake"
 class TestEnvironment
   include FileUtils
 
-  def initialize
-  end
+  def initialize; end
 
   def plan_path
     "terraform/plans/#{ansible_environment}"
