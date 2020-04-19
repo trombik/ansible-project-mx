@@ -14,21 +14,11 @@ require "retries"
 $LOAD_PATH.unshift(Pathname.new(File.dirname(__FILE__)) + "ruby" + "lib")
 require "ansible_inventory"
 
-def exec_and_abort_if_fail(cmd)
-  status = system cmd
-  warn "`#{cmd}` failed." unless $CHILD_STATUS.exitstatus.zero?
-  abort unless $CHILD_STATUS.exitstatus.zero?
-  status
-end
-
-def vagrant(args)
-  Bundler.with_clean_env do
-    exec_and_abort_if_fail "vagrant #{args}"
-  end
+def known_environment
+  Dir.glob("inventories/*").select { |d| File.directory?(d) }.map { |d| d.split("/").last }
 end
 
 def ansible_environment
-  known_environment = %w[virtualbox staging prod]
   env = ENV["ANSIBLE_ENVIRONMENT"] ? ENV["ANSIBLE_ENVIRONMENT"] : "virtualbox"
   raise "unknown environment `#{env}`" unless known_environment.include?(env)
   env
@@ -52,63 +42,27 @@ def configure_sudo_password_for(user)
     !ENV.key?("SUDO_PASSWORD")
 end
 
-def plan_path
-  "terraform/plans/#{ansible_environment}"
-end
-
-def run_as_user(env)
+def run_as_user
   return ENV["ANSIBLE_USER"] if ENV["ANSIBLE_USER"]
-  case env
-  when "virtualbox"
-    "vagrant"
-  when "staging"
-    "ec2-user"
-  when "prod"
-    ENV["USER"]
-  end
+  Inventory.user
 end
 
 puts "ANSIBLE_ENVIRONMENT: #{ansible_environment}"
+require_relative "inventories/#{ansible_environment}/inventory_helper"
 
 desc "launch VMs"
 task :up do
-  case ansible_environment
-  when "virtualbox"
-    vagrant "up --no-provision"
-  when "staging"
-    sh "terraform apply #{plan_path}"
-
-    # make sure the cache is up-to-date
-    sh "#{inventory_path}/ec2.py --refresh-cache"
-
-    # make sure all hosts are ready for ansible play
-    retry_opts = {
-      max_tries: 10, base_sleep_seconds: 10, max_sleep_seconds: 30
-    }
-    with_retries(retry_opts) do |_attempt_number|
-      sh "ansible -i #{inventory_path} --ssh-common-args '-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' --user 'ec2-user' -m ping all"
-    end
-  end
+  Inventory.up
 end
 
 desc "destroy VMs"
 task :clean do
-  case ansible_environment
-  when "virtualbox"
-    vagrant "destroy -f"
-  when "staging"
-    sh "terraform destroy -force #{plan_path}"
-  end
+  Inventory.clean
 end
 
 desc "vagrant provision"
 task :provision do
-  case ansible_environment
-  when "virtualbox"
-    vagrant "provision"
-  when "staging"
-    sh "ansible-playbook -i #{inventory_path} --ssh-common-args '-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' --user 'ec2-user' playbooks/site.yml"
-  end
+  Inventory.provision
 end
 
 desc "perform all tests"
@@ -123,52 +77,14 @@ end
 
 # rubocop:disable Metrics/BlockLength:
 namespace :test do
-  desc "Prepare"
-  task :prepare do
-    case ansible_environment
-    when "virtualbox"
-      vagrant "up"
-      vagrant "provision"
-    end
-  end
-
   desc "Provision"
   task :provision do
-    case ansible_environment
-    when "virtualbox"
-      vagrant "provision"
-    else
-      warn "unknown environment `#{ansible_environment}`"
-      exit 1
-    end
-  end
-
-  desc "Restart VMs"
-  task :restart do
-    case ansible_environment
-    when "virtualbox"
-      vagrant "reload --provision"
-    else
-      warn "unknown environment `#{ansible_environment}`"
-      exit 1
-    end
+    Inventory.provision
   end
 
   desc "Clean"
   task :clean do
-    case ansible_environment
-    when "virtualbox"
-      begin
-        # XXX use `true` until https://github.com/hashicorp/vagrant/issues/9137 is
-        # fixed.
-        vagrant "destroy -f || true"
-      ensure
-        sh "rm -f *.vdi"
-      end
-    else
-      warn "unknown environment `#{ansible_environment}`"
-      exit 1
-    end
+    Inventory.clean
   end
 
   namespace "serverspec" do
@@ -180,8 +96,8 @@ namespace :test do
         inventory.all_hosts_in(g).each do |h|
           # XXX pass SUDO_PASSWORD to serverspec if the user is required to
           # type password
-          configure_sudo_password_for(run_as_user(ansible_environment))
-          puts "running serverspec for #{g} on #{h} as user `#{run_as_user(ansible_environment)}`"
+          configure_sudo_password_for(run_as_user)
+          puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         end
       end
@@ -192,8 +108,8 @@ namespace :test do
       desc "Run serverspec for group `#{g}`"
       task g.to_sym do |_t|
         inventory.all_hosts_in(g).each do |h|
-          configure_sudo_password_for(run_as_user(ansible_environment))
-          puts "running serverspec for #{g} on #{h} as user `#{run_as_user(ansible_environment)}`"
+          configure_sudo_password_for(run_as_user)
+          puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         end
       end
@@ -201,7 +117,7 @@ namespace :test do
   end
 
   namespace "integration" do
-    user = run_as_user(ansible_environment)
+    user = run_as_user
     directories = Pathname.glob("spec/integration/[0-9][0-9][0-9]_*")
     directories.each do |d|
       desc "run integration spec #{d.basename}"
@@ -231,7 +147,7 @@ namespace :test do
       # the process replaced is still bundler environment.
       vault_password_file = ENV["ANSIBLE_VAULT_PASSWORD_FILE"]
       test_env = ansible_environment
-      user = run_as_user(ansible_environment)
+      user = run_as_user
       Bundler.with_clean_env do
         ENV["ANSIBLE_ENVIRONMENT"] = test_env
         ENV["ANSIBLE_VAULT_PASSWORD_FILE"] = vault_password_file
