@@ -14,6 +14,7 @@
     - debug: var=hostvars[inventory_hostname]
   roles:
     - trombik.hostname
+    - trombik.pf
     - trombik.zsh
     - trombik.vim
     - trombik.git
