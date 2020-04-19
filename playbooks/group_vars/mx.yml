@@ -262,5 +262,33 @@ x509_certificate:
 
 pf_rule: |
   set skip on lo
-  block return
-  pass
+  set block-policy drop
+
+  table <rfc1918> const { \
+    10/8, \
+    172.16/12, \
+    192.168/16 \
+  }
+
+  table <ssh_from> const { \
+  {% for from in project_pf_ssh_from %}
+    {{ from }}, \
+  {% endfor %}
+  }
+
+  block log all
+
+  pass inet  proto icmp  all icmp-type echoreq
+  pass inet6 proto icmp6 all icmp6-type echoreq
+  pass inet  proto udp   from any to any port { bootps, bootpc }
+
+  # ingress
+  pass in  proto tcp from { <ssh_from>, <rfc1918> } to self port { ssh }
+  pass in  proto tcp from any to self port { smtp, submission, imaps }
+  pass in  proto tcp from any to self port { http, https }
+
+  # egress
+  pass out inet  proto icmp  from self to any
+  pass out inet6 proto icmp6 from self to any
+  pass out       proto tcp   from self to any
+  pass out       proto udp   from self to any
