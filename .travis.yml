@@ -22,4 +22,4 @@ install:
   - bundle install --path=vendor/bundle --with development
 
 scripts:
-  - rake test:travis
+  - bundle exec rake test:travis
