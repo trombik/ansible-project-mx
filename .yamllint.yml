@@ -13,4 +13,6 @@ ignore: |
   node_modules
   roles.galaxy
   playbooks/group_vars/prod.yml
+  playbooks/group_vars/*-credentials.yml
   ruby
+  .terraform
