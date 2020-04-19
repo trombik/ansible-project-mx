@@ -9,7 +9,7 @@ shared_examples "a host with default users" do
          when "virtualbox"
            YAML.load_file("playbooks/group_vars/virtualbox-credentials.yml")
          else
-           Ansible::Vault.new("playbooks/group_vars/#{test_environment}-credentials.yml")
+           YAML.safe_load(Ansible::Vault.decrypt(file: "playbooks/group_vars/#{test_environment}-credentials.yml"))
          end
   users = yaml["project_users"]
   users.each do |u|
