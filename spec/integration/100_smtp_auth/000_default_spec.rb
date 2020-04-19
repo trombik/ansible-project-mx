@@ -49,8 +49,10 @@ all_hosts_in("mx").each do |server|
 
     context "when SMTP client fails to send correct credential" do
       it "raises Net::SMTPAuthenticationError" do
-        expect { smtp.start("localhost", invalid_user, invalid_password, :plain).to
-                 raise_exception(Net::SMTPAuthenticationError) }
+        expect do
+          smtp.start("localhost", invalid_user, invalid_password, :plain).to
+          raise_exception(Net::SMTPAuthenticationError)
+        end
       end
     end
 
