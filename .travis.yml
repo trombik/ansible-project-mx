@@ -22,6 +22,4 @@ install:
   - bundle install --path=vendor/bundle --with development
 
 scripts:
-  - bundle exec rubocop --display-style-guide --extra-details --display-cop-names
-  - node node_modules/markdownlint-cli/markdownlint.js .
-  - yamllint -c .yamllint.yml .
+  - rake test:travis
