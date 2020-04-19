@@ -3,7 +3,7 @@
 _meta:
   terraform:
     mx1.trombik.org:
-      ami: ami12345
+      ami: ami-04af7ec1b9ea369dd
       tags:
         Name: mx1.trombik.org
         stage: staging
@@ -12,7 +12,7 @@ mx1.trombik.org:
   children:
     tag_Name_mx1_trombik_org:
   vars:
-    ansible_python_interpreter: /usr/local/bin/python2.7
+    ansible_python_interpreter: /usr/local/bin/python3
 mx:
   children:
     mx1.trombik.org:
