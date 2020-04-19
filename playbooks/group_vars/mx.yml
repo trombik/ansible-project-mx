@@ -8,7 +8,7 @@ project_vmail_auth_group: vmailauth
 project_certificate_secret: "/etc/ssl/{{ ansible_fqdn }}.key"
 project_certificate_public: "/etc/ssl/{{ ansible_fqdn }}.crt"
 
-# opensmtpd
+# ______________________________________________________smtpd
 opensmtpd_extra_packages:
   - opensmtpd-extras
 opensmtpd_tables:
@@ -51,7 +51,7 @@ opensmtpd_config: |
   listen on {{ address }} port 25
   listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
-  action "inbound" lmtp "/var/dovecot/lmtp" rcpt-to virtual <virtuals>
+  action "inbound" lmtp "{{ project_dovecot_unix_socket }}" rcpt-to virtual <virtuals>
   action "outbound" relay
   match from any for domain <domains> action "inbound"
   match auth from any for any action "outbound"
@@ -65,7 +65,9 @@ opensmtpd_virtual_user:
   comment: Virtual Mail User
 
 opensmtpd_include_x509_certificate: yes
-# dovecot
+
+# ______________________________________________________dovecot
+project_dovecot_unix_socket: /var/dovecot/lmtp
 dovecot_extra_groups:
   - vmailauth
 dovecot_flags: ""
@@ -107,7 +109,7 @@ dovecot_config_fragments:
         group = {{ project_vmail_auth_group }}
       }
       service lmtp {
-        unix_listener /var/dovecot/lmtp {
+        unix_listener {{ project_dovecot_unix_socket }} {
           user = {{ opensmtpd_virtual_user.name }}
           group = {{ opensmtpd_virtual_user.group }}
           mode = 0600
