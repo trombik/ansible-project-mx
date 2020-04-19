@@ -46,7 +46,7 @@ describe command "(sleep 3; echo helo localhost) | openssl s_client -connect #{e
 
   its(:exit_status) { should eq 0 }
   its(:stderr) { should eq "" }
-  its(:stdout) { match(/^CONNECTED.+$/) }
+  its(:stdout) { should match(/^CONNECTED.+$/) }
   it "replies with SMTP banner" do
     expect(reply).to match(/^220 #{Regexp.escape(fqdn)} ESMTP OpenSMTPD$/)
   end
