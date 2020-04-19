@@ -25,8 +25,8 @@ describe command "(sleep 3; echo) | openssl s_client -connect #{egress_address}:
 
   its(:exit_status) { should eq 0 }
   its(:stderr) { should eq "" }
-  its(:stdout) { match(/^CONNECTED.+$/) }
-  it "replies with SMTP banner" do
+  its(:stdout) { should match(/^CONNECTED.+$/) }
+  it "replies with IMAP banner" do
     expect(reply).to match(/^\* OK \[CAPABILITY IMAP4rev1.*\] Dovecot ready\.$/)
   end
 end
