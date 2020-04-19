@@ -1,5 +1,5 @@
 #!/bin/sh
-pkg_add python%3.7 curl sudo--
+pkg_add python%2.7 curl sudo--
 echo "#includedir /etc/sudoers.d" >> /etc/sudoers
 mkdir -p /etc/sudoers.d
 touch /etc/sudoers.d/vagrant
