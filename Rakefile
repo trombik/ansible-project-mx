@@ -44,25 +44,26 @@ end
 
 def run_as_user
   return ENV["ANSIBLE_USER"] if ENV["ANSIBLE_USER"]
-  Inventory.user
+  @test_environment.user
 end
 
 puts "ANSIBLE_ENVIRONMENT: #{ansible_environment}"
-require_relative "inventories/#{ansible_environment}/inventory_helper"
+require_relative "inventories/#{ansible_environment}/test_environment"
+@test_environment = TestEnvironment.new
 
 desc "launch VMs"
 task :up do
-  Inventory.up
+  @test_environment.up
 end
 
 desc "destroy VMs"
 task :clean do
-  Inventory.clean
+  @test_environment.clean
 end
 
 desc "vagrant provision"
 task :provision do
-  Inventory.provision
+  @test_environment.provision
 end
 
 desc "perform all tests"
@@ -79,12 +80,12 @@ end
 namespace :test do
   desc "Provision"
   task :provision do
-    Inventory.provision
+    @test_environment.provision
   end
 
   desc "Clean"
   task :clean do
-    Inventory.clean
+    @test_environment.clean
   end
 
   namespace "serverspec" do
