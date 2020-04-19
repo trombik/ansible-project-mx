@@ -1,0 +1,7 @@
+[server]
+server1
+
+[client]
+
+[all:children]
+server
