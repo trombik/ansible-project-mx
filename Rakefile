@@ -99,11 +99,9 @@ task :provision do
   end
 end
 
-desc "all all tests; serverspec, integration, and rubocop"
+desc "perform all tests"
 task test: [
-  # probably, each target deserves its own Jenkins stage. but for now, I would
-  # like to merge the branch first. or, the branch history will mess up.
-  "test:rubocop:all",
+  "test:travis",
   :up,
   :provision,
   "test:serverspec:all",
@@ -162,9 +160,9 @@ namespace :test do
   end
 
   namespace "serverspec" do
-    inventory = AnsibleInventory.new(inventory_path)
     desc "Run serverspec on all hosts"
     task "all" do
+      inventory = AnsibleInventory.new(inventory_path)
       inventory.all_groups.each do |g|
         next unless Dir.exist?("spec/serverspec/#{g}")
         inventory.all_hosts_in(g).each do |h|
@@ -182,7 +180,8 @@ namespace :test do
         end
       end
     end
-    inventory.all_groups.each do |g|
+    groups = Dir.glob("sepc/serverspec/*").select { |d| d != "shared_examples" && File.directory?(d) }
+    groups.each do |g|
       next unless Dir.exist?("spec/serverspec/#{g}")
       desc "Run serverspec for group `#{g}`"
       task g.to_sym do |_t|
@@ -198,37 +197,6 @@ namespace :test do
           puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         end
-      end
-    end
-  end
-
-  # XXX replace `serverspec` namespace with this when it is confirmed that the
-  # tasks are acutually faster.
-  namespace "para" do
-    inventory = AnsibleInventory.new(inventory_path)
-    inventory.all_groups.each do |g|
-      next unless Dir.exist?("spec/serverspec/#{g}")
-      inventory.all_hosts_in(g).each do |h|
-        # XXX hide the tasks from the task list because it can be tested only
-        # with remote hosts, not VMs on the same machine.
-        #
-        # desc "Run serverspec for group `#{g}` on #{h}"
-        task "#{g}:#{h}" do |_t|
-          Vagrant::Serverspec.new(inventory_path)
-                             .run_with_fork(group: g, hostname: h)
-        end
-      end
-    end
-
-    inventory.all_groups.each do |g|
-      next unless Dir.exist?("spec/serverspec/#{g}")
-      # XXX hide the tasks from the task list because it can be tested only
-      # with remote hosts, not VMs on the same machine.
-      #
-      # desc "Run serverspec for group `#{g}`"
-      hosts = inventory.all_hosts_in(g)
-      task g.to_sym => hosts.map { |h| "test:para:#{g}:#{h}" } do |_t|
-        Process.waitall
       end
     end
   end
@@ -284,11 +252,22 @@ namespace :test do
     end
   end
 
-  namespace "rubocop" do
-    desc "Run rubocop"
-    task :all do
-      sh "rubocop --display-cop-names --display-style-guide"
+  namespace "travis" do
+    task :rubocop do
+      sh "rubocop --display-cop-names --display-style-guide --extra-details"
     end
+
+    task :markdownlint do
+      sh "node node_modules/markdownlint-cli/markdownlint.js ."
+    end
+
+    task :yamllint do
+      sh "yamllint -c .yamllint.yml ."
+    end
+
+    task all: [:rubocop, :markdownlint, :yamllint]
   end
+  desc "Run tests performed in Travis CI"
+  task travis: ["travis:all"]
 end
 # rubocop:enable Metrics/BlockLength:
