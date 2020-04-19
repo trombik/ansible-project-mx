@@ -1,25 +1,25 @@
 ---
 galaxy_info:
   author: Tomoyuki Sakurai
+  role_name: dovecot
   description: Configures dovecot
   company: N/A
   license: BSD
   min_ansible_version: 2.4
   platforms:
-  - name: FreeBSD
-    versions:
-      - 10.3
-  - name: OpenBSD
-    versions:
-      - 6.1
-      - 6.2
-  - name: Ubuntu
-    versions:
-      - trusty
-      - xenial
+    - name: FreeBSD
+      versions:
+        - 12.1
+    - name: OpenBSD
+      versions:
+        - 6.5
+        - 6.6
+    - name: Ubuntu
+      versions:
+        - bionic
   galaxy_tags:
     - imap
     - pop3
     - dovecot
     - mail
-dependencies:
+dependencies: []
