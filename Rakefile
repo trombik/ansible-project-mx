@@ -46,14 +46,26 @@ def sudo_password_required?(user)
   user != "root" && user != "vagrant" && user != "ec2-user"
 end
 
-def configure_sudo_password_for(run_as_user)
+def configure_sudo_password_for(user)
   ENV["SUDO_PASSWORD"] = sudo_password if
-    sudo_password_required?(run_as_user) &&
+    sudo_password_required?(user) &&
     !ENV.key?("SUDO_PASSWORD")
 end
 
 def plan_path
   "terraform/plans/#{ansible_environment}"
+end
+
+def run_as_user(env)
+  return ENV["ANSIBLE_USER"] if ENV["ANSIBLE_USER"]
+  case env
+  when "virtualbox"
+    "vagrant"
+  when "staging"
+    "ec2-user"
+  when "prod"
+    ENV["USER"]
+  end
 end
 
 puts "ANSIBLE_ENVIRONMENT: #{ansible_environment}"
@@ -168,14 +180,8 @@ namespace :test do
         inventory.all_hosts_in(g).each do |h|
           # XXX pass SUDO_PASSWORD to serverspec if the user is required to
           # type password
-          run_as_user = case ansible_environment
-                        when "virtualbox"
-                          Vagrant::SSH::Config.for(h)["User".downcase]
-                        when "staging"
-                          "ec2-user"
-                        end
-          configure_sudo_password_for(run_as_user)
-          puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
+          configure_sudo_password_for(run_as_user(ansible_environment))
+          puts "running serverspec for #{g} on #{h} as user `#{run_as_user(ansible_environment)}`"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         end
       end
@@ -186,15 +192,8 @@ namespace :test do
       desc "Run serverspec for group `#{g}`"
       task g.to_sym do |_t|
         inventory.all_hosts_in(g).each do |h|
-          # XXX !DRY
-          run_as_user = case ansible_environment
-                        when "virtualbox"
-                          Vagrant::SSH::Config.for(h)["User".downcase]
-                        when "staging"
-                          "ec2-user"
-                        end
-          configure_sudo_password_for(run_as_user)
-          puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
+          configure_sudo_password_for(run_as_user(ansible_environment))
+          puts "running serverspec for #{g} on #{h} as user `#{run_as_user(ansible_environment)}`"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         end
       end
@@ -202,18 +201,7 @@ namespace :test do
   end
 
   namespace "integration" do
-    # set the default user name in each environment
-    run_as_user = case ansible_environment
-                  when "virtualbox"
-                    "vagrant"
-                  when "staging"
-                    "ec2-user"
-                  when "prod"
-                    ENV["USER"]
-                  end
-
-    # but if ANSIBLE_USER is defined by the user, override it
-    run_as_user = ENV["ANSIBLE_USER"] if ENV["ANSIBLE_USER"]
+    user = run_as_user(ansible_environment)
     directories = Pathname.glob("spec/integration/[0-9][0-9][0-9]_*")
     directories.each do |d|
       desc "run integration spec #{d.basename}"
@@ -223,7 +211,7 @@ namespace :test do
         Bundler.with_clean_env do
           ENV["ANSIBLE_ENVIRONMENT"] = test_env
           ENV["ANSIBLE_VAULT_PASSWORD_FILE"] = vault_password_file
-          configure_sudo_password_for(run_as_user)
+          configure_sudo_password_for(user)
           sh "bundle exec rspec #{d}/*_spec.rb"
         end
       end
@@ -243,10 +231,11 @@ namespace :test do
       # the process replaced is still bundler environment.
       vault_password_file = ENV["ANSIBLE_VAULT_PASSWORD_FILE"]
       test_env = ansible_environment
+      user = run_as_user(ansible_environment)
       Bundler.with_clean_env do
         ENV["ANSIBLE_ENVIRONMENT"] = test_env
         ENV["ANSIBLE_VAULT_PASSWORD_FILE"] = vault_password_file
-        configure_sudo_password_for(run_as_user)
+        configure_sudo_password_for(user)
         sh "bundle exec rspec spec/integration/**/*_spec.rb"
       end
     end
