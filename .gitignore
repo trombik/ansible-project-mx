@@ -8,3 +8,4 @@
 /.terraform/
 /terraform.*
 .rspec_status
+node_modules/

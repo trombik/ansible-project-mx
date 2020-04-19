@@ -1,0 +1,27 @@
+---
+language: ruby
+rvm:
+  - 2.6
+cache: bundler
+
+# Use the new container infrastructure
+sudo: false
+
+before_install:
+  - pyenv global 3.7
+
+  # Use bundler 2.x
+  - gem install bundler
+
+install:
+  - npm install
+
+  # XXX without this, pip3 fails with
+  # `The `pip3' command exists in these Python versions:`
+  - pip3 install --user yamllint ansible
+  - bundle install --path=vendor/bundle --with development
+
+scripts:
+  - bundle exec rubocop --display-style-guide --extra-details --display-cop-names
+  - node node_modules/markdownlint-cli/markdownlint.js .
+  - yamllint -c .yamllint.yml .
