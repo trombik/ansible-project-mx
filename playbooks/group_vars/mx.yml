@@ -257,3 +257,10 @@ x509_certificate:
         98XdGs+SkGrSHyXaHBmcUfFtUW7JfYEcAFrIWLV6E7e1BBjExn53Z97xZgwOvq1x
         m0f30I/wnrEVBZwTF/pl5dDLq3a3Pm0kEIcZkzwXve4+
         -----END CERTIFICATE-----
+
+# ______________________________________________________pf
+
+pf_rule: |
+  set skip on lo
+  block return
+  pass
