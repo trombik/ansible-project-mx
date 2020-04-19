@@ -2,8 +2,8 @@ require_relative "../spec_helper"
 require "net/smtp"
 
 all_hosts_in("mx").each do |server|
-  describe server do
-    let(:smtp) { Net::SMTP.new(current_server.address, 25) }
+  describe "smtpd on #{server}" do
+    let(:smtp) { Net::SMTP.new(server.address, 25) }
     let(:to) { "bar@example.net" }
     before(:each) { smtp.start("localhost.example.org") }
     after(:each) { smtp.finish if smtp.started? }
