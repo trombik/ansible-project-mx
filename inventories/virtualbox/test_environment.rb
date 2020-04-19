@@ -2,8 +2,7 @@ require "English"
 
 # `virtualbox` environment
 class TestEnvironment
-  def initialize()
-  end
+  def initialize; end
 
   def exec_and_abort_if_fail(cmd)
     status = system cmd
