@@ -1,0 +1,4 @@
+---
+
+- name: Reload pf.conf
+  command: pfctl -f {{ pf_conf }}

@@ -7,3 +7,4 @@
 - name: trombik.x509_certificate
 - name: trombik.dovecot
 - name: trombik.git
+- name: trombik.pf
