@@ -20,6 +20,7 @@ operations, such as deploying and testing. Available targets can be shown by:
 * Virtualbox
 * Vagrant
 * python 3
+* terraform
 
 ## Environment variables
 
