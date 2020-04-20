@@ -22,9 +22,9 @@ environment by running same commands.
 
 It is assumed that machines in the environment belong to:
 
-* `$ENVIRONMENT` `ansible` group
-* `$ENVIRONMENT-credentials` `ansible` group
-* `all` `ansible` group
+- `$ENVIRONMENT` `ansible` group
+- `$ENVIRONMENT-credentials` `ansible` group
+- `all` `ansible` group
 
 `$ENVIRONMENT-credentials.yml` for `$ENVIRONMENT` `ansible` group must be
 encrypted by `ansible-vault` unless it is `virtualbox` environment. Secret
