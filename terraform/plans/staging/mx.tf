@@ -22,6 +22,9 @@ module "instance" {
   source                        = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.17.0"
   ssh_key_pair                  = "terraform-key"
   instance_type                 = "t2.micro"
+
+  # the AMI was built with:
+  # https://github.com/ajacoutot/aws-openbsd
   ami                           = "ami-04af7ec1b9ea369dd"
   ami_owner                     = "227373499457"
   vpc_id                        = "vpc-7a87641e"
