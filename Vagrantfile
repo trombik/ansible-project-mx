@@ -101,6 +101,7 @@ Vagrant.configure("2") do |config|
           end
         end
         c.vm.provision :ansible do |ansible|
+          ansible.compatibility_mode = "2.0"
           ansible_extra_vars_staging = {
             ansible_python_interpreter: "/usr/local/bin/python",
             ansible_user: "vagrant",
