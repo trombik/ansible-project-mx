@@ -1,3 +1,4 @@
 ---
 
-- include: mx.yml
+- name: Import mx.yml
+  import_playbook: mx.yml
