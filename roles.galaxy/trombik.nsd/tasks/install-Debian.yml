@@ -1,0 +1,34 @@
+---
+
+- name: Install nsd_extra_packages
+  apt:
+    name: "{{ nsd_extra_packages }}"
+    state: present
+
+- name: Install nsd_package
+  apt:
+    name: "{{ nsd_package }}"
+    state: present
+
+- name: Enable nsd_service
+  service:
+    name: "{{ nsd_service }}"
+    enabled: yes
+
+- name: Stop systemd-resolved
+  service:
+    name: systemd-resolved
+    enabled: false
+    state: stopped
+
+- name: "Create /etc/default/{{ nsd_service }}"
+  # XXX the systemd unit file does not read this
+  template:
+    src: Debian.default.j2
+    dest: "/etc/default/{{ nsd_service }}"
+    mode: 0644
+    # keep the original copy in case you need the defaults in it
+    backup: yes
+    validate: sh -n %s
+  notify:
+    - Restart nsd_service

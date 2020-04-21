@@ -9,3 +9,4 @@
 - name: trombik.git
 - name: trombik.pf
 - name: trombik.sudo
+- name: trombik.nsd

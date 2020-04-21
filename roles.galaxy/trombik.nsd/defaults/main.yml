@@ -1,0 +1,17 @@
+---
+
+nsd_package: "{{ __nsd_package }}"
+nsd_service: "{{ __nsd_service }}"
+nsd_extra_packages: []
+nsd_user: "{{ __nsd_user }}"
+nsd_group: "{{ __nsd_group }}"
+nsd_extra_groups: []
+nsd_config_dir: "{{ __nsd_config_dir }}"
+nsd_config_file: "{{ nsd_config_dir }}/nsd.conf"
+nsd_config: ""
+nsd_flags: ""
+nsd_zones: []
+nsd_zonesdir: "{{ __nsd_zonesdir }}"
+nsd_pid_dir: "{{ __nsd_pid_dir }}"
+nsd_pid_file: "{{ nsd_pid_dir }}/nsd.pid"
+nsd_include_x509_certificate: no

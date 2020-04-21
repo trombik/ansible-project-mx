@@ -1,0 +1,8 @@
+---
+__nsd_service: nsd
+__nsd_package: nsd
+__nsd_config_dir: /etc/nsd
+__nsd_user: nsd
+__nsd_group: nsd
+__nsd_pid_dir: /run/nsd
+__nsd_zonesdir: /var/lib/nsd

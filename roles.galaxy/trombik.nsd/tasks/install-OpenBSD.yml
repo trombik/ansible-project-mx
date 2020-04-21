@@ -1,0 +1,19 @@
+---
+
+- name: Install nsd_extra_packages
+  openbsd_pkg:
+    name: "{{ nsd_extra_packages }}"
+    state: present
+
+# - name: Install nsd_package
+#   openbsd_pkg:
+#     name: "{{ nsd_package }}"
+#     state: present
+
+- name: Enable nsd_service
+  service:
+    name: "{{ nsd_service }}"
+    arguments: "{{ nsd_flags }}"
+    enabled: yes
+  notify:
+    - Restart nsd_service

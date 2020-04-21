@@ -1,0 +1,6 @@
+---
+
+- name: Restart nsd_service
+  service:
+    name: "{{ nsd_service }}"
+    state: restarted
