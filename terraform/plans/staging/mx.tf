@@ -33,7 +33,7 @@ module "instance" {
   name                          = "${replace(var.fqdn, "[.]", "_")}"
   namespace                     = "${module.project_yaml.result["name"]}"
   stage                         = "${var.stage}"
-  allowed_ports                 = ["22", "25", "587", "993"]
+  allowed_ports                 = ["22", "25", "587", "993", "53"]
   tags                          = "${map("Name", var.fqdn, "Project", module.project_yaml.result["name"])}"
   root_volume_type              = "standard"
   root_volume_size              = "12"
