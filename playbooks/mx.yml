@@ -18,6 +18,7 @@
     - role: trombik.vim
     - role: trombik.git
     - role: create_users
+    - role: trombik.nsd
     - role: create_extra_groups
     - role: trombik.opensmtpd
     - role: trombik.dovecot
