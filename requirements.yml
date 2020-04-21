@@ -8,3 +8,4 @@
 - name: trombik.dovecot
 - name: trombik.git
 - name: trombik.pf
+- name: trombik.sudo

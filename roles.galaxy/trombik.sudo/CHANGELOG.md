@@ -1,0 +1,19 @@
+## Release 1.0.4
+
+* 996acf6 build(deps): bump nokogiri from 1.10.7 to 1.10.8
+
+## Release 1.0.3
+
+* 81941b5 bugfix: QA
+
+## Release 1.0.2
+
+* a2e5289 bugfix: wrong path to sudoers(5)
+
+## Release 1.0.1
+
+* dd9efc7 QA
+
+## Release 1.0.0
+
+* Initial release
