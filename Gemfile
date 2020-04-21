@@ -15,6 +15,8 @@ group :development, :test do
   gem "rubocop", "~> 0.51.0"
   # gem "selenium-webdriver"
   gem "serverspec"
+  gem "dnsruby"
+  gem "irb"
 
   # TODO: remove these legacy gems
   gem "infrataster", ">= 0.3.2", git: "https://github.com/trombik/infrataster.git", branch: "reallyenglish"
