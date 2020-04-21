@@ -1,6 +1,7 @@
 require_relative "../spec_helper"
 
 fqdn = "mx1.trombik.org"
+config_dir = "/etc"
 
 describe fqdn do
   it_behaves_like "a host with all basic tools installed"
@@ -56,4 +57,12 @@ describe command "(sleep 3; echo helo localhost) | openssl s_client -connect #{e
   it "replies with SMTP banner" do
     expect(reply).to match(/^220 #{Regexp.escape(fqdn)} ESMTP OpenSMTPD$/)
   end
+end
+
+describe file "#{config_dir}/sudoers.d/100_wheel" do
+  it { should be_file }
+end
+
+describe file "#{config_dir}/sudoers.d/vagrant" do
+  it { should_not exist }
 end

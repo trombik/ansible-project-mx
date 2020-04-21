@@ -1,4 +1,6 @@
 ---
+sudo_sudoer: |
+  #includedir {{ sudo_confd_dir }}
 
 hosts_enable_localhost: yes
 hosts_extra_localhosts:

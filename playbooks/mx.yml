@@ -12,6 +12,7 @@
   roles:
     - role: trombik.hosts
     - role: trombik.hostname
+    - role: trombik.sudo
     - role: trombik.pf
     - role: trombik.zsh
     - role: trombik.vim
