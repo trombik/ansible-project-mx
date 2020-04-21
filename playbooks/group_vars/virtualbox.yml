@@ -2,3 +2,4 @@
 
 # this is defined in inventories/virtualbox/virtualbox.yml
 hostname_fqdn: "{{ inventory_hostname }}"
+project_x509_certificate_debug_log: yes
