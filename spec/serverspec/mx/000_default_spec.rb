@@ -7,6 +7,12 @@ describe fqdn do
   it_behaves_like "a host with default users"
 end
 
+describe command "hostname" do
+  its(:exit_status) { should eq 0 }
+  its(:stderr) { should eq "" }
+  its(:stdout) { should eq fqdn + "\n" }
+end
+
 def virtual_users(file)
   YAML.safe_load(Ansible::Vault.decrypt(file: file))["project_virtual_user_credentials"]
 rescue RuntimeError
