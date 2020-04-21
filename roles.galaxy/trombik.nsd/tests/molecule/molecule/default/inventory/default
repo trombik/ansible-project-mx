@@ -1,0 +1,9 @@
+[master]
+master1
+
+[slave]
+slave1
+
+[all:children]
+master
+slave

@@ -1,0 +1,25 @@
+---
+
+- name: Install nsd_extra_packages
+  pkgng:
+    name: "{{ nsd_extra_packages }}"
+    state: present
+
+- name: Install nsd_package
+  pkgng:
+    name: "{{ nsd_package }}"
+    state: present
+
+- name: Enable nsd_service
+  service:
+    name: "{{ nsd_service }}"
+    enabled: yes
+
+- name: "Create /etc/rc.conf.d/{{ nsd_service }}"
+  template:
+    src: FreeBSD.rcd.j2
+    dest: "/etc/rc.conf.d/{{ nsd_service }}"
+    mode: 0644
+    validate: sh -n %s
+  notify:
+    - Restart nsd_service
