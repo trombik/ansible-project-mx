@@ -1,3 +1,4 @@
 ---
 
 hostname_fqdn: "{{ ec2_tag_Name }}"
+project_x509_certificate_debug_log: no
