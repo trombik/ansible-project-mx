@@ -264,6 +264,7 @@ pf_rule: |
   pass in  proto tcp from { <ssh_from>, <rfc1918> } to self port { ssh }
   pass in  proto tcp from any to self port { smtp, submission, imaps }
   pass in  proto tcp from any to self port { http, https }
+  pass in  proto { udp, tcp } from any to self port { domain }
 
   # egress
   pass out inet  proto icmp  from self to any
