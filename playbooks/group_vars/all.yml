@@ -1,1 +1,5 @@
 ---
+
+hosts_enable_localhost: yes
+hosts_extra_localhosts:
+  - "{{ inventory_hostname }}"
