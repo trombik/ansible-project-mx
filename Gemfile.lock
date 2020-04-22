@@ -7,8 +7,8 @@ GIT
 
 GIT
   remote: https://github.com/trombik/ansibleinventory.git
-  revision: 5db8372f62bd67c9a6342fed25f32f061a5cde97
-  branch: 0.1.0
+  revision: 6ca46fadc35fe837b8cd701d9882e11567556a89
+  branch: master
   specs:
     ansibleinventory (0.1.0)
 
