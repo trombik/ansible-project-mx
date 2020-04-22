@@ -13,29 +13,6 @@ GIT
     ansibleinventory (0.1.0)
 
 GIT
-  remote: https://github.com/trombik/infrataster-plugin-firewall.git
-  revision: eef6fe86fb9d5302ac98fd5402f3ba807f9b70b6
-  branch: reallyenglish
-  specs:
-    infrataster-plugin-firewall (0.1.4)
-      infrataster (~> 0.3.0)
-
-GIT
-  remote: https://github.com/trombik/infrataster.git
-  revision: 1cc9b77126d5e1e7a445456cdbf6fee4f0ab4bd4
-  branch: reallyenglish
-  specs:
-    infrataster (0.3.2)
-      capybara
-      faraday
-      faraday_middleware (>= 0.10.0)
-      net-ssh
-      net-ssh-gateway
-      poltergeist
-      rspec (>= 2.0, < 4.0)
-      thor
-
-GIT
   remote: https://github.com/trombik/vagrant-serverspec.git
   revision: 07d6aea596731c7670cebe734552d6f407df3d1e
   branch: master
@@ -59,54 +36,26 @@ GEM
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     ast (2.4.0)
-    capybara (3.32.1)
-      addressable
-      mini_mime (>= 0.1.3)
-      nokogiri (~> 1.8)
-      rack (>= 1.6.0)
-      rack-test (>= 0.6.3)
-      regexp_parser (~> 1.5)
-      xpath (~> 3.2)
-    cliver (0.3.2)
     diff-lcs (1.3)
     dnsruby (1.61.3)
       addressable (~> 2.5)
-    faraday (1.0.1)
-      multipart-post (>= 1.2, < 3)
-    faraday_middleware (1.0.0)
-      faraday (~> 1.0)
     highline (2.0.3)
     io-console (0.5.6)
     irb (1.2.3)
       reline (>= 0.0.1)
-    mini_mime (1.0.2)
-    mini_portile2 (2.4.0)
     multi_json (1.14.1)
-    multipart-post (2.1.1)
     net-scp (2.0.0)
       net-ssh (>= 2.6.5, < 6.0.0)
     net-ssh (5.2.0)
-    net-ssh-gateway (2.0.0)
-      net-ssh (>= 4.0.0)
     net-telnet (0.1.1)
-    nokogiri (1.10.9)
-      mini_portile2 (~> 2.4.0)
     parallel (1.19.1)
     parser (2.7.1.1)
       ast (~> 2.4.0)
-    poltergeist (1.18.1)
-      capybara (>= 2.1, < 4)
-      cliver (~> 0.3.1)
-      websocket-driver (>= 0.2.0)
     powerpack (0.1.2)
     public_suffix (4.0.4)
-    rack (2.2.2)
-    rack-test (1.1.0)
-      rack (>= 1.0, < 3)
     rainbow (2.2.2)
       rake
     rake (13.0.1)
-    regexp_parser (1.7.0)
     reline (0.1.3)
       io-console (~> 0.5)
     retries (0.0.5)
@@ -147,13 +96,7 @@ GEM
       net-ssh (>= 2.7)
       net-telnet (= 0.1.1)
       sfl
-    thor (1.0.1)
     unicode-display_width (1.7.0)
-    websocket-driver (0.7.1)
-      websocket-extensions (>= 0.1.0)
-    websocket-extensions (0.1.4)
-    xpath (3.2.0)
-      nokogiri (~> 1.8)
 
 PLATFORMS
   ruby
@@ -163,8 +106,6 @@ DEPENDENCIES
   ansibleinventory!
   dnsruby
   highline
-  infrataster (>= 0.3.2)!
-  infrataster-plugin-firewall (>= 0.1.4)!
   irb
   rake
   retries (~> 0.0.5)

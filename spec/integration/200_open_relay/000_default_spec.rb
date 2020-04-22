@@ -1,9 +1,11 @@
 require_relative "../spec_helper"
 require "net/smtp"
 
-all_hosts_in("mx").each do |server|
+inventory = AnsibleInventory.new("inventories/#{ENV["ANSIBLE_ENVIRONMENT"]}/#{ENV["ANSIBLE_ENVIRONMENT"]}.yml")
+
+inventory.all_hosts_in("mx").each do |server|
   describe "smtpd on #{server}" do
-    let(:smtp) { Net::SMTP.new(server.address, 25) }
+    let(:smtp) { Net::SMTP.new(inventory.host(server)["ansible_host"], 25) }
     let(:to) { "bar@example.net" }
     before(:each) { smtp.start("localhost.example.org") }
     after(:each) { smtp.finish if smtp.started? }
