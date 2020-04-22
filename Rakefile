@@ -101,7 +101,10 @@ namespace :test do
       inventory.all_groups.each do |g|
         next unless Dir.exist?("spec/serverspec/#{g}")
 
+        puts "group: #{g}"
         inventory.all_hosts_in(g).each do |h|
+          puts "host: #{h}"
+
           # XXX pass SUDO_PASSWORD to serverspec if the user is required to
           # type password
           configure_sudo_password_for(run_as_user)
