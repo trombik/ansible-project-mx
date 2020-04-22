@@ -3,8 +3,6 @@
 require_relative "../spec_helper"
 require "net/smtp"
 
-inventory = AnsibleInventory.new("inventories/#{ENV['ANSIBLE_ENVIRONMENT']}/#{ENV['ANSIBLE_ENVIRONMENT']}.yml")
-
 inventory.all_hosts_in("mx").each do |server|
   address = inventory.host(server)["ansible_host"]
   describe "smtpd on #{server}" do

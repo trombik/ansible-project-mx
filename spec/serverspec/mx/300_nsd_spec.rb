@@ -2,9 +2,6 @@
 
 require_relative "../spec_helper"
 
-inventory_file = Pathname.new("inventories") + ENV["ANSIBLE_ENVIRONMENT"] + "#{ENV['ANSIBLE_ENVIRONMENT']}.yml"
-inventory = AnsibleInventory.new(inventory_file)
-
 describe service "nsd" do
   it { should be_enabled }
   it { should be_running }
@@ -61,6 +58,12 @@ domains = [
     vip: vip
   }
 ]
+
+describe "vip" do
+  it "should not be empty" do
+    expect(vip.length).not_to eq 0
+  end
+end
 
 domains.each do |domain|
   describe file("/var/nsd/etc/#{domain[:name]}") do
