@@ -76,4 +76,4 @@ To perform integration tests, run `test:integration:all` target.
 
 #### `mx1.trombik.org`
 
-The MTA.
+The MTA, and authoritative DNS server.
