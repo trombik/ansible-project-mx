@@ -30,7 +30,7 @@ when "virtualbox"
     user: ssh_options["User".downcase],
     keys: ssh_options["IdentityFile".downcase],
     keys_only: ssh_options["IdentitiesOnly".downcase],
-    paranoid: ssh_options["StrictHostKeyChecking".downcase]
+    verify_host_key: ssh_options["StrictHostKeyChecking".downcase]
   }
 when "staging"
   # proxy = Net::SSH::Proxy::Command.new(
@@ -42,7 +42,7 @@ when "staging"
     user: "ec2-user",
     keys_only: true,
     keys: ["/usr/home/trombik/.ssh/id_rsa-trombik"],
-    paranoid: false
+    verify_host_key: :never
   }
 end
 options[:proxy] = proxy if proxy
