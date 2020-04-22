@@ -2,7 +2,8 @@
 
 require_relative "../spec_helper"
 
-inventory = AnsibleInventory.new("inventories/#{ENV['ANSIBLE_ENVIRONMENT']}/#{ENV['ANSIBLE_ENVIRONMENT']}.yml")
+inventory_file = Pathname.new("inventories") + ENV["ANSIBLE_ENVIRONMENT"] + "#{ENV['ANSIBLE_ENVIRONMENT']}.yml"
+inventory = AnsibleInventory.new(inventory_file)
 
 describe service "nsd" do
   it { should be_enabled }

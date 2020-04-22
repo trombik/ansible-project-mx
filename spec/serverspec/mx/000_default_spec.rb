@@ -28,7 +28,8 @@ describe file "/etc/mail/passwd" do
   it { should be_mode 640 }
   it { should be_owned_by "root" }
   it { should be_grouped_into "vmailauth" }
-  virtual_users("playbooks/group_vars/#{test_environment}-credentials.yml").each do |v|
+  credentials_file = Pathname.new("playbooks") + "group_vars" + "#{test_environment}-credentials.yml"
+  virtual_users(credentials_file).each do |v|
     uname = v.split(":").first
     its(:content) { should match(/^#{uname}:\$[0-9a-z]{2}\$[0-9]{2}\$.*::::::$/) }
   end
