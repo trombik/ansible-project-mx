@@ -1,5 +1,4 @@
 ---
-
 _meta:
   terraform:
     mx1.trombik.org:
@@ -8,23 +7,26 @@ _meta:
         Name: mx1.trombik.org
         stage: staging
 
-mx1.trombik.org:
-  children:
-    tag_Name_mx1_trombik_org:
-  vars:
-    ansible_python_interpreter: /usr/local/bin/python3
-mx:
+all:
   hosts:
+  children:
     mx1.trombik.org:
-
-staging-mx:
-  children:
+      hosts:
+        mx1_trombik_org:
+      vars:
+        ansible_python_interpreter: /usr/local/bin/python3
     mx:
+      children:
+        mx1.trombik.org:
 
-staging-credentials:
-  children:
-    mx:
-
-staging:
-  children:
     staging-mx:
+      children:
+        mx:
+
+    staging-credentials:
+      children:
+        mx:
+
+    staging:
+      children:
+        staging-mx:
