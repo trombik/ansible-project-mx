@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 shared_examples "a host with all basic tools installed" do
   tools = [
     # XXX serverspec does not understand vim--no_x11

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 shared_examples "a host with a valid hostname" do
   describe command("hostname") do
     its(:exit_status) { should eq 0 }

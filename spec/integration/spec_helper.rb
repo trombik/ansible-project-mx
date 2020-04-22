@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../spec_helper"
 require "ansible/vault"
 
@@ -28,9 +30,7 @@ def vagrant_status
   out = ""
   Bundler.with_clean_env do
     out = `vagrant status --machine-readable`
-    unless $CHILD_STATUS.exitstatus.zero?
-      raise StandardError, "Failed to run vagrant status"
-    end
+    raise StandardError, "Failed to run vagrant status" unless $CHILD_STATUS.exitstatus.zero?
   end
   out
 end

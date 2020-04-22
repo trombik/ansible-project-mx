@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 shared_examples "a host with default users" do
   home = case os[:family]
          when "freebsd"
@@ -31,6 +33,7 @@ shared_examples "a host with default users" do
     end
 
     next unless u.key?("ssh_rc")
+
     describe file "#{home}/#{u['name']}/.ssh/rc" do
       it { should exist }
       it { should be_file }
