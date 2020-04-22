@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "English"
 require "yaml"
 require "pathname"
@@ -17,14 +19,14 @@ def local_ip
       s.connect "8.8.8.8", 1 # any global IP address works here
       s.addr.last
     end
-  ensure
-    Socket.do_not_reverse_lookup = orig
+                ensure
+                  Socket.do_not_reverse_lookup = orig
   end
 end
 
 # @return [Integer] default listening port
 def local_port
-  ENV["VAGRANT_HTTP_PROXY_PORT"] ? ENV["VAGRANT_HTTP_PROXY_PORT"] : 8080
+  ENV["VAGRANT_HTTP_PROXY_PORT"] || 8080
 end
 
 # @return [String] the proxy URL
@@ -42,7 +44,7 @@ rescue SocketError, Errno::ECONNREFUSED,
 rescue Errno::EPERM, Errno::ETIMEDOUT
   false
 ensure
-  socket && socket.close
+  socket&.close
 end
 # XXX proxy handling should be roled into a library and the lines above should
 # be removed from the file
@@ -63,6 +65,7 @@ inventory_file = inventory_directory + "#{environment}.yml"
 inventory = YAML.load_file(inventory_file)
 playbooks_directory = project_root_directory + "playbooks"
 raise "`#{project_config}` does not have mandatory key `name`" unless project.key?("name")
+
 # group_name = project["name"]
 
 Vagrant.configure("2") do |config|
