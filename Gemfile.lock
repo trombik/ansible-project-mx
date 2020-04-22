@@ -8,10 +8,10 @@ GIT
 
 GIT
   remote: https://github.com/trombik/ansible-vault
-  revision: e866de21351ef8a67d66356a1b051e7ea9f0d711
-  branch: master
+  revision: 32d4909d7f4d4788a84df0c1a50a92bca03ef5d1
+  branch: 0.2.0
   specs:
-    ansible-vault (0.1.0)
+    ansible-vault (0.2.0)
 
 GIT
   remote: https://github.com/trombik/infrataster-plugin-firewall.git
@@ -178,4 +178,4 @@ DEPENDENCIES
   vagrant-ssh-config!
 
 BUNDLED WITH
-   1.17.3
+   2.0.2
