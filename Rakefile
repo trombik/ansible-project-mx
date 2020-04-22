@@ -13,6 +13,8 @@ require "highline/import"
 require "vagrant/serverspec"
 require "vagrant/ssh/config"
 require "retries"
+require "find"
+require "open3"
 $LOAD_PATH.unshift(Pathname.new(File.dirname(__FILE__)) + "ruby" + "lib")
 require "ansibleinventory"
 
@@ -180,6 +182,38 @@ namespace :test do
     task all: [:rubocop, :markdownlint, :yamllint]
   end
   desc "Run tests performed in Travis CI"
-  task travis: ["travis:all"]
+  task travis: ["travis:all", "aspell"]
+
+  desc "Check spell in markdown files"
+  task "aspell" do
+    puts "Running aspell"
+    files = []
+    Find.find("docs") do |path|
+      next if File.directory?(path)
+
+      files << path =~ /^[^.].*\md$/
+    end
+    files << "README.md"
+    files.each do |file|
+      content = ""
+      File.open(file) do |f|
+        content = f.read
+      end
+      # XXX Ubuntu bionic version is lagged behind (0.60.7-20110707)
+      # `--mode markdown` was implemented in 0.60.8. add that option when the
+      # package is updated.
+      o, e, status = Open3.capture3 "aspell " \
+        "--lang en --personal ./.aspell.en.pws list",
+                                    stdin_data: content
+      raise "failed to run aspell: #{e}" unless status.success?
+
+      next if o.empty?
+
+      o.split("\n").each do |l|
+        puts "#{file}: #{l}"
+      end
+      raise "aspell failed"
+    end
+  end
 end
 # rubocop:enable Metrics/BlockLength:

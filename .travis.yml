@@ -1,12 +1,14 @@
 ---
 language: ruby
+dist: bionic
 rvm:
   - 2.6
 cache: bundler
-
-# Use the new container infrastructure
-sudo: false
-
+addons:
+  apt:
+    packages:
+      - aspell
+      - aspell-en
 before_install:
   - pyenv global 3.7
 
@@ -20,6 +22,10 @@ install:
   # `The `pip3' command exists in these Python versions:`
   - pip3 install --user yamllint ansible
   - bundle install --path=vendor/bundle --with development
+
+  # XXX aspll for Ubuntu is too old. it does not support `--mode markdown`.
+  # one day, ubuntu would catch up with us. see `test:aspell` in Rakefile.
+  - aspell --version
 
 scripts:
   - bundle exec rake test:travis
