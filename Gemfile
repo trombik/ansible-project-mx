@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 
 gem "ansible-vault", git: "https://github.com/trombik/ansible-vault", branch: "0.2.0"
@@ -12,7 +14,7 @@ group :development, :test do
   gem "retries", "~> 0.0.5"
   gem "rspec", "~> 3.4.0"
   gem "rspec-retry", "~> 0.5.5"
-  gem "rubocop", "~> 0.51.0"
+  gem "rubocop"
   # gem "selenium-webdriver"
   gem "dnsruby"
   gem "irb"
