@@ -1,7 +1,7 @@
 require_relative "../spec_helper"
 require "dnsruby"
 
-inventory = AnsibleInventory.new("inventories/#{ENV["ANSIBLE_ENVIRONMENT"]}/#{ENV["ANSIBLE_ENVIRONMENT"]}.yml")
+inventory = AnsibleInventory.new("inventories/#{ENV['ANSIBLE_ENVIRONMENT']}/#{ENV['ANSIBLE_ENVIRONMENT']}.yml")
 
 mx = %w[mx.trombik.org]
 ns = %w[a.ns.trombik.org b.ns.trombik.org]

@@ -2,7 +2,7 @@ require_relative "../spec_helper"
 require "net/imap"
 require "net/smtp"
 
-inventory = AnsibleInventory.new("inventories/#{ENV["ANSIBLE_ENVIRONMENT"]}/#{ENV["ANSIBLE_ENVIRONMENT"]}.yml")
+inventory = AnsibleInventory.new("inventories/#{ENV['ANSIBLE_ENVIRONMENT']}/#{ENV['ANSIBLE_ENVIRONMENT']}.yml")
 
 inventory.all_hosts_in("mx").each do |server|
   context "when unauthenticated" do
@@ -19,7 +19,6 @@ inventory.all_hosts_in("mx").each do |server|
   end
 
   context "when authenticated" do
-
     describe server do
       address = inventory.host(server)["ansible_host"]
       user = "john@trombik.org"
