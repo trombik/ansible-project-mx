@@ -17,8 +17,4 @@ group :development, :test do
   gem "dnsruby"
   gem "irb"
   gem "serverspec"
-
-  # TODO: remove these legacy gems
-  gem "infrataster", ">= 0.3.2", git: "https://github.com/trombik/infrataster.git", branch: "reallyenglish"
-  gem "infrataster-plugin-firewall", ">= 0.1.4", git: "https://github.com/trombik/infrataster-plugin-firewall.git", branch: "reallyenglish"
 end

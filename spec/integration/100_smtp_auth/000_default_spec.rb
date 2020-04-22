@@ -1,10 +1,13 @@
 require_relative "../spec_helper"
 require "net/smtp"
 
-all_hosts_in("mx").each do |server|
+inventory = AnsibleInventory.new("inventories/#{ENV["ANSIBLE_ENVIRONMENT"]}/#{ENV["ANSIBLE_ENVIRONMENT"]}.yml")
+
+inventory.all_hosts_in("mx").each do |server|
+  address = inventory.host(server)["ansible_host"]
   describe "smtpd on #{server}" do
     let(:smtp) do
-      o = Net::SMTP.new(server.address, 587)
+      o = Net::SMTP.new(address, 587)
       ctx = OpenSSL::SSL::SSLContext.new
       ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE if test_environment != "prod"
       o.enable_tls(ctx)

@@ -1,11 +1,15 @@
 require_relative "../spec_helper"
 require "net/imap"
+require "net/smtp"
 
-all_hosts_in("mx").each do |s|
+inventory = AnsibleInventory.new("inventories/#{ENV["ANSIBLE_ENVIRONMENT"]}/#{ENV["ANSIBLE_ENVIRONMENT"]}.yml")
+
+inventory.all_hosts_in("mx").each do |server|
   context "when unauthenticated" do
-    describe s do
+    let(:address) { inventory.host(server)["ansible_host"] }
+    describe server do
       let(:imap) do
-        Net::IMAP.new(s.server.address, ssl: { verify_mode: OpenSSL::SSL::VERIFY_NONE })
+        Net::IMAP.new(address, ssl: { verify_mode: OpenSSL::SSL::VERIFY_NONE })
       end
 
       it "authenticates valid user" do
@@ -15,14 +19,26 @@ all_hosts_in("mx").each do |s|
   end
 
   context "when authenticated" do
-    describe s do
-      id = Time.new.to_i
-      subject = "Test-#{id}"
+
+    describe server do
+      address = inventory.host(server)["ansible_host"]
+      user = "john@trombik.org"
+      password = "PassWord"
+      smtp = Net::SMTP.new(address, 587)
+      ctx = OpenSSL::SSL::SSLContext.new
+      ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE if test_environment != "prod"
+      smtp.enable_tls(ctx)
+
       msg_id = nil
-      imap = Net::IMAP.new(s.server.address, ssl: { verify_mode: OpenSSL::SSL::VERIFY_NONE })
+      imap = nil
+      subject = "Test-#{Time.new.to_i}"
+      msg = "Subject: #{subject}\n\ntest"
 
       before(:all) do
-        s.server.ssh_exec("echo test | mail -s #{subject} john@trombik.org")
+        smtp.start(address, user, password, :plain)
+        smtp.send_message(msg, user, user)
+        smtp.finish
+        imap = Net::IMAP.new(address, ssl: { verify_mode: OpenSSL::SSL::VERIFY_NONE })
         imap.authenticate("PLAIN", "john@trombik.org", "PassWord")
       end
 
