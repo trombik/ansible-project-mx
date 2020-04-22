@@ -14,7 +14,7 @@ mx1.trombik.org:
   vars:
     ansible_python_interpreter: /usr/local/bin/python3
 mx:
-  children:
+  hosts:
     mx1.trombik.org:
 
 staging-mx:
