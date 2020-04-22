@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 gem "ansible-inventory-yaml", git: "https://github.com/trombik/ansible-inventory-yaml.git", branch: "master"
-gem "ansible-vault", git: "https://github.com/trombik/ansible-vault", branch: "master"
+gem "ansible-vault", git: "https://github.com/trombik/ansible-vault", branch: "0.2.0"
 gem "highline"
 gem "rake"
 gem "vagrant-serverspec", git: "https://github.com/trombik/vagrant-serverspec.git", branch: "master"
