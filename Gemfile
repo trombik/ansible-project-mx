@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "ansible-inventory-yaml", git: "https://github.com/trombik/ansible-inventory-yaml.git", branch: "master"
+gem "ansibleinventory", git: "https://github.com/trombik/ansibleinventory.git", branch: "0.1.0"
 gem "ansible-vault", git: "https://github.com/trombik/ansible-vault", branch: "0.2.0"
 gem "highline"
 gem "rake"
