@@ -1,5 +1,7 @@
 require_relative "../spec_helper"
 
+inventory = AnsibleInventory.new("inventories/#{ENV["ANSIBLE_ENVIRONMENT"]}/#{ENV["ANSIBLE_ENVIRONMENT"]}.yml")
+
 describe service "nsd" do
   it { should be_enabled }
   it { should be_running }
@@ -22,14 +24,7 @@ nsd_user = case os[:family]
              "nsd"
            end
 
-vip = case ENV["ANSIBLE_ENVIRONMENT"]
-      when "virtualbox"
-        "172.16.100.100"
-      when "prod"
-        "52.193.151.1"
-      else
-        raise "unknown ANSIBLE_ENVIRONMENT"
-      end
+vip = inventory.host("mx1.trombik.org")["ansible_host"]
 
 # XXX use YAML
 domains = [
