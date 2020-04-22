@@ -30,7 +30,7 @@ Metrics/BlockLength:
     - context
     - shared_examples
 
-Metrics/LineLength:
+Layout/LineLength:
   Exclude:
     - "**/*_spec.rb"
     - "**/Vagrantfile"
