@@ -12,7 +12,7 @@ require "vagrant/serverspec"
 require "vagrant/ssh/config"
 require "retries"
 $LOAD_PATH.unshift(Pathname.new(File.dirname(__FILE__)) + "ruby" + "lib")
-require "ansible_inventory"
+require "ansibleinventory"
 
 def known_environment
   Dir.glob("inventories/*").select { |d| File.directory?(d) }.map { |d| d.split("/").last }

@@ -4,9 +4,9 @@ require "net/ssh"
 require "pathname"
 require "vagrant/serverspec"
 require "vagrant/ssh/config"
-$LOAD_PATH.unshift(Pathname.new(File.dirname(__FILE__)).parent + "ruby" + "lib")
-require "ansible_inventory"
+require "ansibleinventory"
 require "ansible/vault"
+$LOAD_PATH.unshift(Pathname.new(File.dirname(__FILE__)).parent + "ruby" + "lib")
 
 ENV["LANG"] = "C"
 
