@@ -58,14 +58,5 @@ inventory.all_hosts_in("mx").each do |server|
         end
       end
     end
-
-    context "when test environment is prod" do
-      before(:each) { smtp.start("localhost", user, password, :plain) }
-
-      it "rejects message from the test user, which should not exist in prod" do
-        skip "the example is only for prod environment" if test_environment != "prod"
-        expect { smtp.mailfrom(user) }.to raise_exception(Net::SMTPAuthenticationError)
-      end
-    end
   end
 end
