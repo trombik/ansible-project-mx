@@ -78,7 +78,7 @@ Subjects in a test MUST be identical other than environmental differences.
 Environmental differences SHOULD NOT be hard-coded in tests. Group variables
 SHOULD be used where possible.
 
-See also [Environment.md].
+See also [Environment.md](Environment.md).
 
 ### Secret information
 
