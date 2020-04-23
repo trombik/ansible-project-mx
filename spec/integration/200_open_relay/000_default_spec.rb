@@ -5,7 +5,12 @@ require "net/smtp"
 
 inventory.all_hosts_in("mx").each do |server|
   describe "smtpd on #{server}" do
-    let(:smtp) { Net::SMTP.new(inventory.host(server)["ansible_host"], 25) }
+    let(:smtp) do
+      o = Net::SMTP.new(inventory.host(server)["ansible_host"], 25)
+      o.open_timeout = 30
+      o.read_timeout = 30
+      o
+    end
     let(:to) { "bar@example.net" }
     before(:each) { smtp.start("localhost.example.org") }
     after(:each) { smtp.finish if smtp.started? }
