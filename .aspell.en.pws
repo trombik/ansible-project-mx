@@ -25,3 +25,6 @@ rubocop
 yamllint
 LF
 markdownlint
+idempotency
+PRs
+md
