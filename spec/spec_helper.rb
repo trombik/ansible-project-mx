@@ -47,3 +47,11 @@ def inventory_path
           .parent
           .parent + "inventories" + test_environment
 end
+
+# Returns YAML content as hash
+def credentials_yaml
+  file = Pathname.new("playbooks") + "group_vars" + "#{test_environment}-credentials.yml"
+  YAML.safe_load(Ansible::Vault.decrypt(file: file))
+rescue RuntimeError
+  YAML.load_file(file)
+end

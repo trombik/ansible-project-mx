@@ -29,7 +29,7 @@ inventory.all_hosts_in("mx").each do |server|
     end
 
     context "when to is a valid address of our domain" do
-      let(:to) { "john@trombik.org" }
+      let(:to) { credentials_yaml["project_test_user"]["name"] }
       let(:from) { "foo@example.org" }
 
       it "accepts message" do
