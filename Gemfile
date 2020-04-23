@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "ansible-vault", git: "https://github.com/trombik/ansible-vault", branch: "0.2.0"
+gem "ansible-vault", git: "https://github.com/trombik/ansible-vault", branch: "master"
 gem "ansibleinventory", git: "https://github.com/trombik/ansibleinventory.git", branch: "master"
 gem "highline"
 gem "rake"

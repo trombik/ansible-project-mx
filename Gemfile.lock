@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/trombik/ansible-vault
-  revision: 32d4909d7f4d4788a84df0c1a50a92bca03ef5d1
-  branch: 0.2.0
+  revision: d5844508de670b401bce18e013c6d79475e4deb7
+  branch: master
   specs:
     ansible-vault (0.2.0)
 
