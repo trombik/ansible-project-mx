@@ -4,6 +4,9 @@ require_relative "../spec_helper"
 require "net/imap"
 require "net/smtp"
 
+test_user = credentials_yaml["project_test_user"]["name"]
+test_pass = credentials_yaml["project_test_user"]["password"]
+
 inventory.all_hosts_in("mx").each do |server|
   context "when unauthenticated" do
     let(:address) { inventory.host(server)["ansible_host"] }
@@ -13,7 +16,7 @@ inventory.all_hosts_in("mx").each do |server|
       end
 
       it "authenticates valid user" do
-        expect { imap.authenticate("PLAIN", "john@trombik.org", "PassWord") }.not_to raise_exception
+        expect { imap.authenticate("PLAIN", test_user, test_pass) }.not_to raise_exception
       end
     end
   end
@@ -21,8 +24,8 @@ inventory.all_hosts_in("mx").each do |server|
   context "when authenticated" do
     describe server do
       address = inventory.host(server)["ansible_host"]
-      user = "john@trombik.org"
-      password = "PassWord"
+      user = test_user
+      password = test_pass
       smtp = Net::SMTP.new(address, 587)
       ctx = OpenSSL::SSL::SSLContext.new
       ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE if test_environment != "prod"
@@ -38,7 +41,7 @@ inventory.all_hosts_in("mx").each do |server|
         smtp.send_message(msg, user, user)
         smtp.finish
         imap = Net::IMAP.new(address, ssl: { verify_mode: OpenSSL::SSL::VERIFY_NONE })
-        imap.authenticate("PLAIN", "john@trombik.org", "PassWord")
+        imap.authenticate("PLAIN", test_user, test_pass)
       end
 
       after(:all) do

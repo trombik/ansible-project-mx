@@ -13,8 +13,8 @@ inventory.all_hosts_in("mx").each do |server|
       o.enable_tls(ctx)
       o
     end
-    let(:user) { "john@trombik.org" }
-    let(:password) { "PassWord" }
+    let(:user) { credentials_yaml["project_test_user"]["name"] }
+    let(:password) { credentials_yaml["project_test_user"]["password"] }
     let(:invalid_user) { "dave.null@trombik.org" }
     let(:invalid_password) { "foobarbuz" }
 

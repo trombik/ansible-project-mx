@@ -16,23 +16,14 @@ describe command "hostname" do
   its(:stdout) { should eq fqdn + "\n" }
 end
 
-def virtual_users(file)
-  YAML.safe_load(Ansible::Vault.decrypt(file: file))["project_virtual_user_credentials"]
-rescue RuntimeError
-  YAML.load_file(file)["project_virtual_user_credentials"]
-end
-
 describe file "/etc/mail/passwd" do
   it { should exist }
   it { should be_file }
   it { should be_mode 640 }
   it { should be_owned_by "root" }
   it { should be_grouped_into "vmailauth" }
-  credentials_file = Pathname.new("playbooks") + "group_vars" + "#{test_environment}-credentials.yml"
-  virtual_users(credentials_file).each do |v|
-    uname = v.split(":").first
-    its(:content) { should match(/^#{uname}:\$[0-9a-z]{2}\$[0-9]{2}\$.*::::::$/) }
-  end
+  user_name = credentials_yaml["project_test_user"]["name"]
+  its(:content) { should match(/^#{user_name}:\$[0-9a-z]{2}\$[0-9]{2}\$.*::::::$/) }
 end
 
 describe service "smtpd" do
