@@ -2,5 +2,8 @@
     "url": "https://github.com/trombik/ansible-project-mx/",
     "devDependencies": {
         "markdownlint-cli": "^0.22.0"
+    },
+    "dependencies": {
+        "markdown-toc": "^1.2.0"
     }
 }
