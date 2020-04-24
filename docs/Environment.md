@@ -1,5 +1,18 @@
 # Environment
 
+## Table of Contents
+
+<!-- toc -->
+
+- [Default environments](#default-environments)
+- [`virtualbox` environment](#virtualbox-environment)
+- [`prod` environment](#prod-environment)
+- [Creating an environment](#creating-an-environment)
+
+<!-- tocstop -->
+
+## General
+
 An environment is where you can _deploy_ the project. A project must have at
 least two environments, one for developing and testing, and another for
 production. A project may have additional environments, such as one for
