@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Release 2.0.1
+
+* 975811a bugfix: fix path to python on FreeBSD
+* 4e10221 bugfix: notify monit when files change
+
 ## Release 2.0.0
 
 ### Backward incompatibilities

@@ -68,6 +68,8 @@
   with_dict: "{{ monit_rc }}"
   when:
     - item.value.state == 'present'
+  notify:
+    - Restart monit
 
 - name: Remove monitrc fragments
   file:
@@ -76,6 +78,8 @@
   with_dict: "{{ monit_rc }}"
   when:
     - item.value.state == 'absent'
+  notify:
+    - Restart monit
 
 - name: Create monit.conf
   template:
@@ -87,15 +91,6 @@
   notify:
     - Remove old monit.conf files
     - Restart monit
-
-- name: Validate monit.conf
-  # XXX you cannot use `validate` in `Create monit.conf` task because you must
-  # validate the file *and* all files that it includes.
-  # XXX you cannot use a handler to validate the file because the handler is
-  # executed at the end of all the tasks.
-  command: "monit -t -c {{ monit_conf_file }}"  # noqa 503
-  changed_when: false
-  when: register_monitrc.changed
 
 - name: Create monit_script_dir
   file:
@@ -125,6 +120,15 @@
     - item.state == 'absent'
   notify:
     - Restart monit
+
+- name: Validate monit.conf
+  # XXX you cannot use `validate` in `Create monit.conf` task because you must
+  # validate the file *and* all files that it includes.
+  # XXX you cannot use a handler to validate the file because the handler is
+  # executed at the end of all the tasks.
+  command: "monit -t -c {{ monit_conf_file }}"  # noqa 503
+  changed_when: false
+  when: register_monitrc.changed
 
 - name: Start monit
   service:
