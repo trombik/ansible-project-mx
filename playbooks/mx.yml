@@ -22,3 +22,4 @@
     - role: create_extra_groups
     - role: trombik.opensmtpd
     - role: trombik.dovecot
+    - role: trombik.monit
