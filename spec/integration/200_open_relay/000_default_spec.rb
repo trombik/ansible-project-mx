@@ -3,8 +3,16 @@
 require_relative "../spec_helper"
 require "net/smtp"
 
+RSpec.configure do |config|
+  # XXX AWS imposes "limitations" on both ingress and egress SMTP connections.
+  # A request has been submitted to AWS support. until the port is unblocked,
+  # disable tests over port 25.
+  # https://console.aws.amazon.com/support/contacts?#/rdns-limits
+  config.filter_run_excluding type: "require_smtp_unblocking" unless test_environment == "virtualbox"
+end
+
 inventory.all_hosts_in("mx").each do |server|
-  describe "smtpd on #{server}" do
+  describe "smtpd on #{server}", type: :require_smtp_unblocking do
     let(:smtp) do
       o = Net::SMTP.new(inventory.host(server)["ansible_host"], 25)
       o.open_timeout = 30
