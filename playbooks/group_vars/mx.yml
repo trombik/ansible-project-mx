@@ -117,7 +117,7 @@ opensmtpd_config: |
   table {{ table.name }} {{ table.type }}:{{ table.path }}{% if table['type'] == 'db' %}.db{% endif %}
 
   {% endfor %}
-  {% for address in ansible_all_ipv4_addresses %}
+  {% for address in ansible_all_ipv4_addresses + [ "127.0.0.1" ] %}
   listen on {{ address }} port 25
   listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
@@ -275,7 +275,7 @@ pf_rule: |
 #______________________________________________________monit
 monit_config: |
   set daemon 10
-    with start delay 60
+    with start delay {{ project_monit_start_delay }}
   set httpd port 2812
     use address 127.0.0.1
     allow 127.0.0.1
@@ -312,3 +312,26 @@ monit_rc:
 
       check program check_nsd_ns with path "{{ monit_script_dir }}/check_nsd_ns.sh"
         if status != 0 for 3 cycles then exec "/usr/sbin/rcctl restart nsd"
+  smtpd:
+    state: present
+    content: |
+      check process smtpd matching /usr/sbin/smtpd
+        start    program "/usr/sbin/rcctl start   smtpd"
+        stop     program "/usr/sbin/rcctl stop    smtpd"
+        restart  program "/usr/sbin/rcctl restart smtpd"
+        if failed
+          port 25 and
+          expect "^220.*"
+          send   "HELO localhost.localdomain\r\n"
+          expect "^250.*"
+          send   "QUIT\r\n"
+        then restart
+  dovecot:
+    state: present
+    content: |
+      check process dovecot matching /usr/local/sbin/dovecot
+        start    program "/usr/sbin/rcctl start   dovecot"
+        stop     program "/usr/sbin/rcctl stop    dovecot"
+        restart  program "/usr/sbin/rcctl restart dovecot"
+        if failed host localhost port 993 protocol imaps
+        then restart

@@ -3,7 +3,7 @@
 require_relative "../spec_helper"
 require "shellwords"
 
-monitored_services = %w[sshd nsd check_nsd_ns]
+monitored_services = %w[sshd nsd check_nsd_ns smtpd dovecot]
 
 describe service "monit" do
   it { should be_running }
