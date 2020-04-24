@@ -47,7 +47,7 @@ Destructive tests MUST be kept under `tests/integration`.
 
 ## Testing methodology
 
-For tests in a project, the following items SHOULD be used:
+The following items SHOULD be used when the subject is its implementation:
 
 - Ruby language and `rspec`
 - `serverspec` for static tests
@@ -55,6 +55,11 @@ For tests in a project, the following items SHOULD be used:
   `serverspec`, for destructive tests
 - [Better Specs](http://www.betterspecs.org/) as a reference
 - `rubocop` for linting
+
+Packaged applications, such as ruby `gem`, `npm` packages, or platform
+package, SHOULD be used when the subject is content of the repository.
+
+Tests MUST be performed in `test:travis` target in the `Rakefile`.
 
 ## Tests in projects
 
@@ -66,6 +71,9 @@ Tests MUST have identical command to perform them regardless of environments.
 
 Tests in a project MUST test implementation details of the project, and
 the logic behind the implementations.
+
+Tests in a project SHOULD test contents of the project repository where
+possible, such as spellings in documents.
 
 ### Environments
 
