@@ -1,5 +1,23 @@
 # Testing
 
+## ToC
+
+<!-- toc -->
+
+- [Type of tests](#type-of-tests)
+- [Static tests](#static-tests)
+- [Destructive tests](#destructive-tests)
+- [Testing methodology](#testing-methodology)
+- [Tests in projects](#tests-in-projects)
+- [Running tests](#running-tests)
+- [Subjects](#subjects)
+- [Environments](#environments)
+- [Secret information](#secret-information)
+- [Roles under `roles`](#roles-under-roles)
+- [Roles from `galaxy`](#roles-from-galaxy)
+
+<!-- tocstop -->
+
 Tests MUST be automated in projects. This document describes how tests in
 projects are implemented.
 
