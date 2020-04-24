@@ -271,3 +271,44 @@ pf_rule: |
   pass out inet6 proto icmp6 from self to any
   pass out       proto tcp   from self to any
   pass out       proto udp   from self to any
+
+#______________________________________________________monit
+monit_config: |
+  set daemon 10
+    with start delay 60
+  set httpd port 2812
+    use address 127.0.0.1
+    allow 127.0.0.1
+  set logfile syslog facility log_daemon
+
+monit_conf_extra_include_directories: []
+os_ssh_rc_command:
+  OpenBSD:
+    start: /usr/sbin/rcctl start sshd
+    stop: /usr/sbin/rcctl stop sshd
+
+monit_scripts:
+  - name: check_nsd_ns.sh
+    content: |
+      #!/bin/sh
+      /usr/sbin/dig @127.0.0.1 trombik.org ns +short +norec | grep -E 'trombik\.org\.$'
+
+monit_rc:
+  sshd:
+    state: present
+    content: |
+      check process sshd with pidfile /var/run/sshd.pid
+        start program "/usr/sbin/rcctl start sshd"
+        stop program  "/usr/sbin/rcctl stop  sshd"
+        every 2 cycles
+        if failed port 22 protocol ssh then restart
+  nsd:
+    state: present
+    content: |
+      check process nsd with pidfile {{ nsd_pid_file }}
+        start program "/usr/sbin/rcctl start nsd"
+        stop program  "/usr/sbin/rcctl stop  nsd"
+        every 2 cycles
+
+      check program check_nsd_ns with path "{{ monit_script_dir }}/check_nsd_ns.sh"
+        if status != 0 for 3 cycles then exec "/usr/sbin/rcctl restart nsd"
