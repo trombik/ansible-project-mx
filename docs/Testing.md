@@ -1,6 +1,6 @@
 # Testing
 
-## ToC
+## Table of Contents
 
 <!-- toc -->
 

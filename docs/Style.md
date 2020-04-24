@@ -1,5 +1,22 @@
 # Style
 
+## Table of Contents
+
+<!-- toc -->
+
+- [Ruby](#ruby)
+- [Python](#python)
+- [Shell](#shell)
+- [YAML](#yaml)
+- [Markdown](#markdown)
+- [Comments](#comments)
+- [Line feed](#line-feed)
+- [File encoding](#file-encoding)
+- [Language](#language)
+- [Path](#path)
+
+<!-- tocstop -->
+
 ## General
 
 Prefer portability. Portable code finds your bugs.
