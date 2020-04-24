@@ -10,3 +10,4 @@
 - name: trombik.pf
 - name: trombik.sudo
 - name: trombik.nsd
+- name: trombik.monit

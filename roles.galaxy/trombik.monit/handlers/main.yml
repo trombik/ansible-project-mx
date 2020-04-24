@@ -1,0 +1,13 @@
+---
+
+- name: Restart monit
+  service:
+    name: monit
+    state: restarted
+
+- name: Remove old monit.conf files
+  # keep three copies of old monit.conf just in case
+  #
+  # XXX pipefail is not a standard. some shells do not implement it
+  # [306] Shells that use pipes should set the pipefail option
+  shell: "find {{ monit_conf_dir }} -iname '{{ monit_conf_file }}.*@*~' -type f | sort | head -n 3 | xargs -r -n 1 rm"  # noqa 306

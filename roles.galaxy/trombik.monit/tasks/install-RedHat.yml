@@ -1,0 +1,6 @@
+---
+
+- name: Install monit
+  yum:
+    name: monit
+    state: present

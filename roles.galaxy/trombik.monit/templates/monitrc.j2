@@ -1,0 +1,10 @@
+# Managed by ansible
+
+{{ monit_config }}
+
+include {{ monit_conf_include_dir }}/*.monitrc
+{% for i in monit_conf_extra_include_directories %}
+{% if i.state == 'enabled' %}
+include {{ i.path }}/*.monitrc
+{% endif %}
+{% endfor %}

@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  role_name: monit
+  author: Tomoyuki Sakurai
+  description: Configure monit
+  company: N/A
+  license: BSD
+  min_ansible_version: 2.4
+  platforms:
+    - name: FreeBSD
+      versions:
+        - 12.1
+    - name: OpenBSD
+      versions:
+        - 6.6
+    - name: Ubuntu
+      versions:
+        - bionic
+    - name: EL
+      versions:
+        - 7
+  galaxy_tags:
+    - monit
+dependencies: []
