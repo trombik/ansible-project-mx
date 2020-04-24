@@ -272,7 +272,7 @@ pf_rule: |
   pass out       proto tcp   from self to any
   pass out       proto udp   from self to any
 
-#______________________________________________________monit
+# ______________________________________________________monit
 monit_config: |
   set daemon 10
     with start delay {{ project_monit_start_delay }}
