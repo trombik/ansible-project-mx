@@ -1,0 +1,133 @@
+---
+# tasks file for ansible-role-monit
+
+- name: "Include vars/{{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Assert that monit_conf_extra_include_directories is list
+  assert:
+    msg: monit_conf_extra_include_directories must be sequence, or list
+    that:
+      - monit_conf_extra_include_directories is sequence
+
+- name: Assert that every item in monit_conf_extra_include_directories has path and is string
+  assert:
+    msg: "`path` of item in monit_conf_extra_include_directories must exist and must be string"
+    that:
+      - "'path' in item"
+      - item.path is string
+  with_items: "{{ monit_conf_extra_include_directories }}"
+
+- name: Assert that every item in monit_conf_extra_include_directories has `state` and is either enabled or disabled
+  assert:
+    msg: "`state` of item in monit_conf_extra_include_directories must exist and must be either `enabled` or `disabled`"
+    that:
+      - "'state' in item"
+      - item.state == 'enabled' or item.state == 'disabled'
+  with_items: "{{ monit_conf_extra_include_directories }}"
+
+- name: Assert that every item in monit_conf_extra_include_directories has path
+  assert:
+    msg: item in monit_conf_extra_include_directories must have `path` as key
+    that:
+      - "'path' in item"
+  with_items: "{{ monit_conf_extra_include_directories }}"
+
+- name: Assert that every item in monit_rc has state, and is either present or absent
+  assert:
+    msg: "key `{{ item.key }}` must have a key, `state` and the key must be either `present` or `absent`"
+    that:
+      - "'state' in item.value"
+      - item.value.state == 'present' or item.value.state == 'absent'
+  with_dict: "{{ monit_rc }}"
+
+- name: Assert that when state is `prresent`, every item in monit_rc has content, and is string
+  assert:
+    msg: "key `{{ item.key }}` must have a key, `content` when `state` is `present`, and the key must be a string"
+    that:
+      - "'content' in item.value"
+      - item.value.content is string
+  when:
+    - item.value.state == 'present'
+  with_dict: "{{ monit_rc }}"
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include_tasks: "install-{{ ansible_os_family }}.yml"
+
+- name: Create monit_conf_include_dir
+  file:
+    path: "{{ monit_conf_include_dir }}"
+    mode: 0755
+    state: directory
+
+- name: Create monirc fragments
+  template:
+    src: monitrc.fragment.j2
+    dest: "{{ monit_conf_include_dir }}/{{ item.key }}.monitrc"
+    mode: 0600
+  with_dict: "{{ monit_rc }}"
+  when:
+    - item.value.state == 'present'
+
+- name: Remove monitrc fragments
+  file:
+    path: "{{ monit_conf_include_dir }}/{{ item.key }}.monitrc"
+    state: absent
+  with_dict: "{{ monit_rc }}"
+  when:
+    - item.value.state == 'absent'
+
+- name: Create monit.conf
+  template:
+    src: monitrc.j2
+    dest: "{{ monit_conf_file }}"
+    mode: 0600
+    backup: yes
+  register: register_monitrc
+  notify:
+    - Remove old monit.conf files
+    - Restart monit
+
+- name: Validate monit.conf
+  # XXX you cannot use `validate` in `Create monit.conf` task because you must
+  # validate the file *and* all files that it includes.
+  # XXX you cannot use a handler to validate the file because the handler is
+  # executed at the end of all the tasks.
+  command: "monit -t -c {{ monit_conf_file }}"  # noqa 503
+  changed_when: false
+  when: register_monitrc.changed
+
+- name: Create monit_script_dir
+  file:
+    path: "{{ monit_script_dir }}"
+    owner: "{{ monit_user }}"
+    group: "{{ monit_group }}"
+    state: directory
+
+- name: Create monit_scripts
+  template:
+    src: script.j2
+    dest: "{{ monit_script_dir }}/{{ item.name }}"
+    mode: 0755
+  with_items: "{{ monit_scripts }}"
+  when:
+    - "(not 'state' in item) or (item.state == 'present')"
+  notify:
+    - Restart monit
+
+- name: Delete monit_scripts
+  file:
+    path: "{{ monit_script_dir }}/{{ item.name }}"
+    state: absent
+  with_items: "{{ monit_scripts }}"
+  when:
+    - "'state' in item"
+    - item.state == 'absent'
+  notify:
+    - Restart monit
+
+- name: Start monit
+  service:
+    name: "{{ monit_service }}"
+    enabled: true
+    state: started

@@ -1,0 +1,6 @@
+---
+
+- name: Install monit
+  pkgng:
+    name: monit
+    state: present

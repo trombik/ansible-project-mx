@@ -1,0 +1,5 @@
+---
+__monit_user: root
+__monit_group: root
+__monit_conf_dir: /etc/monit
+__monit_conf_include_dir: /etc/monit/monitrc.d

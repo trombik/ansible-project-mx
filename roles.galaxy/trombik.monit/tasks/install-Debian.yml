@@ -1,0 +1,6 @@
+---
+
+- name: Install monit
+  apt:
+    name: monit
+    state: present

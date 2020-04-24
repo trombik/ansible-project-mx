@@ -1,0 +1,6 @@
+---
+
+- name: Install monit
+  openbsd_pkg:
+    name: monit
+    state: present
