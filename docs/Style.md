@@ -32,6 +32,18 @@ Follow what `yamllint` says.
 
 Follow what `markdownlint-cli` says.
 
+When you need "Table of Content", use:
+
+```console
+> node node_modules/markdown-toc/cli.js --no-firsth1 --bullets='-' path/to/file
+```
+
+You may want to use `-i` flag with above command. See:
+
+```console
+> node node_modules/markdown-toc/cli.js --help
+```
+
 ## Comments
 
 An empty line must be followed by comments.
