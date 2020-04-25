@@ -28,4 +28,4 @@ install:
   - aspell --version
 
 scripts:
-  - bundle exec rake test:travis
+  - bundle exec rake test:ci
