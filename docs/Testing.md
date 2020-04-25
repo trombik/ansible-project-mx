@@ -77,7 +77,7 @@ The following items SHOULD be used when the subject is its implementation:
 Packaged applications, such as ruby `gem`, `npm` packages, or platform
 package, SHOULD be used when the subject is content of the repository.
 
-Tests MUST be performed in `test:travis` target in the `Rakefile`.
+Tests MUST be performed in `test:ci` target in the `Rakefile`.
 
 ## Tests in projects
 
