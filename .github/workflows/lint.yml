@@ -1,0 +1,27 @@
+---
+
+name: Lint
+on:
+  pull_request: null
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
+    name: Lint markdown files
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Install and use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install npm packages
+        run: npm install
+
+      - name: Run markdownlint-cli
+        run: node node_modules/markdownlint-cli/markdownlint.js .
