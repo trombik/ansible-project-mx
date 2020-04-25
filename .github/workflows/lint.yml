@@ -5,7 +5,7 @@ on:
   pull_request: null
 
 jobs:
-  tests:
+  markdownlint-cli:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -25,3 +25,28 @@ jobs:
 
       - name: Run markdownlint-cli
         run: node node_modules/markdownlint-cli/markdownlint.js .
+  rubocop:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby:
+          - 2.5
+          - 2.6
+    name: Lint ruby files with rubocop
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Install ruby version ${{ matrix.ruby }}
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Install bundler and gems
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+
+      - name: Run rubocop
+        run: |
+          bundle exec rake test:travis:rubocop
