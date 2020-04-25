@@ -40,7 +40,7 @@ end
 egress_address = Specinfra.backend.run_command(cmd).stdout.chomp
 
 extra_opt = test_environment == "prod" ? "-verify_return_error" : ""
-describe command "(sleep 3; echo helo localhost) | openssl s_client -connect #{egress_address}:587 #{extra_opt}" do
+describe command "(sleep 3; echo helo localhost; sleep 3; echo quit) | openssl s_client -connect #{egress_address}:587 #{extra_opt}" do
   # XXX SMTP is in a world of `CRLF`. remove `CR` so that regex `$` matches
   # the end of line
   let(:reply) { subject.stdout.gsub(/\015/, "") }
