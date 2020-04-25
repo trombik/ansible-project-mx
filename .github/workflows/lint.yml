@@ -50,3 +50,33 @@ jobs:
       - name: Run rubocop
         run: |
           bundle exec rake test:travis:rubocop
+  aspell:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby:
+          - 2.5
+          - 2.6
+    name: Check spellings in markdown files
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Install ruby version ${{ matrix.ruby }}
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Install bundler and gems
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+
+      - name: Install aspell
+        run: |
+          sudo apt-get install aspell aspell-en
+          aspell --version
+
+      - name: Run aspel
+        run: |
+          bundle exec rake test:aspell
