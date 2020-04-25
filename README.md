@@ -1,5 +1,7 @@
 # MTA for `trombik.org`
 
+![Lint](https://github.com/trombik/ansible-project-mx/workflows/Lint/badge.svg)
+
 This project manages MTA for `trombik.org`.
 
 This file explains general overview of the project. Please see [docs](docs/)
