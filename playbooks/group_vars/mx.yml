@@ -110,8 +110,13 @@ opensmtpd_tables:
 
 opensmtpd_flags: -v
 opensmtpd_config: |
+  {% if project_acme_client_bootstrapped %}
+  pki {{ ansible_fqdn }} cert "{{ project_acme_client_cert }}"
+  pki {{ ansible_fqdn }} key "{{ project_acme_client_key }}"
+  {% else %}
   pki {{ ansible_fqdn }} cert "{{ project_mail_pem_path }}"
   pki {{ ansible_fqdn }} key "{{ project_mail_key_path }}"
+  {% endif %}
 
   {% for table in opensmtpd_tables %}
   table {{ table.name }} {{ table.type }}:{{ table.path }}{% if table['type'] == 'db' %}.db{% endif %}
@@ -218,8 +223,13 @@ dovecot_config_fragments:
     state: present
     content: |
       ssl = required
+      {% if project_acme_client_bootstrapped %}
+      ssl_cert = <{{ project_acme_client_cert }}
+      ssl_key = <{{ project_acme_client_key }}
+      {% else %}
       ssl_cert = <{{ project_mail_pem_path }}
       ssl_key = <{{ project_mail_key_path }}
+      {% endif %}
       ssl_cipher_list = ALL:!LOW:!SSLv2:!EXP:!aNULL
       verbose_ssl = yes
   - name: auth.conf
@@ -346,6 +356,20 @@ monit_rc:
         then restart
 
 # ______________________________________________________acme_client
+#
+# XXX after initial bootstarp, run, manually, the following command as root on the host:
+#
+# acme-client -F trombik.org
+#
+# after successful run, set project_acme_client_bootstrapped to `yes` and
+# provision again.
+# project_acme_client_bootstrapped: yes
+project_acme_client_domains:
+  - trombik.org
+  - www.trombik.org
+  - mail.trombik.org
+project_acme_client_cert: /etc/ssl/trombik.org.fullchain.pem
+project_acme_client_key: /etc/ssl/private/trombik.org.key
 acme_client_flags: "-f {{ acme_client_conf_file }}"
 acme_client_domains:
   - trombik.org
@@ -357,8 +381,8 @@ acme_client_config: |
 
   domain trombik.org {
       alternative names { www.trombik.org mail.trombik.org }
-      domain key "/etc/ssl/private/example.org.key"
-      domain full chain certificate "/etc/ssl/example.org.fullchain.pem"
+      domain key "{{ project_acme_client_key }}"
+      domain full chain certificate "{{ project_acme_client_cert }}"
       sign with letsencrypt
   }
 
@@ -371,6 +395,7 @@ acme_client_cron_jobs:
       # XXX use `~` here on OpenBSD 6.7
       minute: 45
       job: "echo acme-client {{ acme_client_flags }} trombik.org"
+
 # ______________________________________________________httpd
 
 httpd_openbsd_config: |
@@ -380,6 +405,22 @@ httpd_openbsd_config: |
   server "default" {
     listen on $ext_addr port 80
   }
+  {% if project_acme_client_bootstrapped %}
+  {% for server_name in project_acme_client_domains %}
+  server "{{ server_name }}" {
+    listen on * tls port 443
+    root "/htdocs"
+    tls {
+      certificate "/etc/ssl/trombik.org.fullchain.pem"
+      key "/etc/ssl/private/trombik.org.key"
+    }
+    location "/.well-known/acme-challenge/*" {
+      root "/acme"
+      request strip 2
+    }
+  }
+  {% endfor %}
+  {% else %}
   server "trombik.org" {
     listen on * port 80
     root "/htdocs"
@@ -396,6 +437,7 @@ httpd_openbsd_config: |
     listen on * port 80
     block return 301 "http://trombik.org$REQUEST_URI"
   }
+  {% endif %}
   # Include MIME types instead of the built-in ones
   types {
     include "/usr/share/misc/mime.types"
