@@ -4,3 +4,4 @@
 hostname_fqdn: "{{ inventory_hostname }}"
 project_x509_certificate_debug_log: yes
 project_monit_start_delay: 10
+project_acme_client_bootstrapped: no

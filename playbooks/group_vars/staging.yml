@@ -3,3 +3,4 @@
 hostname_fqdn: "{{ ec2_tag_Name }}"
 project_x509_certificate_debug_log: no
 project_monit_start_delay: 10
+project_acme_client_bootstrapped: no
