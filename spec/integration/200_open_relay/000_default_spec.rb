@@ -3,6 +3,15 @@
 require_relative "../spec_helper"
 require "net/smtp"
 
+RSpec.configure do |config|
+  # XXX AWS imposes "limitations" on both ingress and egress SMTP connections.
+  # https://console.aws.amazon.com/support/contacts?#/rdns-limits
+  #
+  # skip some tests that require SMTP in staging. you may keep an EIP without
+  # SMTP limitations, but it costs extra fee per hour.
+  config.filter_run_excluding type: "require_smtp_unblocking" if test_environment == "staging"
+end
+
 inventory.all_hosts_in("mx").each do |server|
   describe "smtpd on #{server}", type: :require_smtp_unblocking do
     let(:smtp) do
