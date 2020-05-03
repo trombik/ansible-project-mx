@@ -28,7 +28,6 @@ variable "ports_udp_public" {
   default = [53]
 }
 
-
 resource "aws_security_group" "mx" {
   name                          = "security_group_mx"
   description                   = "Security group for MX host in project MX"
@@ -67,6 +66,11 @@ resource "aws_security_group" "mx" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_eip" "mx" {
+  instance = "${aws_instance.mx.id}"
+  vpc      = true
 }
 
 resource "aws_instance" "mx" {
