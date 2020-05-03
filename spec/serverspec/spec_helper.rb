@@ -32,14 +32,14 @@ when "virtualbox"
     keys_only: ssh_options["IdentitiesOnly".downcase],
     verify_host_key: ssh_options["StrictHostKeyChecking".downcase]
   }
-when "staging"
+when "staging", "prod"
   # proxy = Net::SSH::Proxy::Command.new(
   #   'ssh jumpguy@jump.server.enterprise.com nc %h %p'
   # )
   options = {
     host_name: inventory.host(host)["ansible_host"],
     port: 22,
-    user: "ec2-user",
+    user: ENV["PROJECT_USER"] ? ENV["PROJECT_USER"] : "ec2-user",
     keys_only: true,
     keys: ["/usr/home/trombik/.ssh/id_rsa-trombik"],
     verify_host_key: :never
