@@ -69,7 +69,7 @@ resource "aws_security_group" "mx" {
 }
 
 resource "aws_eip" "mx" {
-  instance = "${aws_instance.mx.id}"
+  instance = aws_instance.mx.id
   vpc      = true
 }
 
