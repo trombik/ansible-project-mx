@@ -39,7 +39,7 @@ when "staging", "prod"
   options = {
     host_name: inventory.host(host)["ansible_host"],
     port: 22,
-    user: ENV["PROJECT_USER"] ? ENV["PROJECT_USER"] : "ec2-user",
+    user: ENV["PROJECT_USER"] || "ec2-user",
     keys_only: true,
     keys: ["/usr/home/trombik/.ssh/id_rsa-trombik"],
     verify_host_key: :never
