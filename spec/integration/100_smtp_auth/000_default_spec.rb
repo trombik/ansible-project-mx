@@ -9,7 +9,7 @@ inventory.all_hosts_in("mx").each do |server|
     let(:smtp) do
       o = Net::SMTP.new(address, 587)
       ctx = OpenSSL::SSL::SSLContext.new
-      ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE if test_environment != "prod"
+      ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
       o.enable_tls(ctx)
       o
     end

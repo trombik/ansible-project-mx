@@ -30,7 +30,7 @@ inventory.all_hosts_in("mx").each do |server|
       smtp.open_timeout = 30
       smtp.read_timeout = 30
       ctx = OpenSSL::SSL::SSLContext.new
-      ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE if test_environment != "prod"
+      ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
       smtp.enable_tls(ctx)
 
       msg_id = nil
