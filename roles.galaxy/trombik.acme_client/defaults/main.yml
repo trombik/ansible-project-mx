@@ -1,0 +1,10 @@
+---
+acme_client_challengedirs: "{{ __acme_client_challengedirs }}"
+acme_client_conf_dir: "{{ __acme_client_conf_dir }}"
+acme_client_conf_file: "{{ acme_client_conf_dir }}/acme-client.conf"
+acme_client_account_key_dir: "{{ __acme_client_account_key_dir }}"
+acme_client_config: ""
+acme_client_flags: ""
+acme_client_domains: []
+acme_client_hanlder: disabled
+acme_client_flush_handlers: no

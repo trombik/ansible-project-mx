@@ -1,0 +1,6 @@
+---
+
+- name: Restart httpd_openbsd
+  service:
+    name: "{{ httpd_openbsd_service }}"
+    state: restarted

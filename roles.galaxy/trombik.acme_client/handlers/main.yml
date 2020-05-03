@@ -1,0 +1,8 @@
+---
+
+- name: Update TLS certs
+  listen: Run acme-client
+  command: "acme-client {{ acme_client_flags }} {{ item | quote }}"
+  with_items: "{{ acme_client_domains }}"
+  when:
+    - acme_client_hanlder == 'enabled'

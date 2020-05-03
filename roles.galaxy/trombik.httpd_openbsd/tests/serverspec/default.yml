@@ -1,0 +1,34 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-httpd-openbsd
+  vars:
+    httpd_openbsd_log_directories:
+      - path: /var/www/logs
+        owner: root
+        group: daemon
+        mode: 0755
+        state: present
+      - path: /var/www/logs/secure
+        owner: root
+        group: daemon
+        mode: g+w
+        state: present
+
+    httpd_openbsd_config: |
+      ext_addr="*"
+      prefork 3
+      # A minimal default server
+      server "default" {
+        listen on $ext_addr port 80
+      }
+
+      # An HTTPS server using SSL/TLS
+      #server "secure.example.com" {
+      #  listen on $ext_addr tls port 443
+      #  log { access "secure-access.log", error "secure-error.log" }
+      #}
+      # Include MIME types instead of the built-in ones
+      types {
+        include "/usr/share/misc/mime.types"
+      }
