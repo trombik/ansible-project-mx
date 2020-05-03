@@ -3,6 +3,8 @@
 - name: trombik.zsh
 - name: trombik.hostname
 - name: trombik.hosts
+- name: trombik.acme_client
+- name: trombik.httpd_openbsd
 - name: trombik.opensmtpd
 - name: trombik.x509_certificate
 - name: trombik.dovecot

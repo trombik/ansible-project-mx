@@ -1,0 +1,57 @@
+---
+# tasks file for ansible-role-acme_client
+
+- name: "Include vars/{{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create acme_client_account_key_dir
+  file:
+    state: directory
+    path: "{{ acme_client_account_key_dir }}"
+    mode: "0700"
+
+- name: Create acme_client_challengedirs
+  file:
+    state: directory
+    path: "{{ item }}"
+  with_items: "{{ acme_client_challengedirs }}"
+
+- name: Create acme-client.conf
+  template:
+    src: acme-client.conf.j2
+    dest: "{{ acme_client_conf_file }}"
+  notify:
+    - Run acme-client
+
+- name: Create acme_client_cron_jobs
+  cron:
+    backup: "{{ item['cron']['backup'] | default(omit) }}"
+    cron_file: "{{ item['cron']['cron_file'] | default(omit) }}"
+    day: "{{ item['cron']['day'] | default(omit) }}"
+    disabled: "{{ item['cron']['disabled'] | default(omit) }}"
+    env: "{{ item['cron']['env'] | default(omit) }}"
+    hour: "{{ item['cron']['hour'] | default(omit) }}"
+    insertafter: "{{ item['cron']['insertafter'] | default(omit) }}"
+    insertbefore: "{{ item['cron']['insertbefore'] | default(omit) }}"
+    job: "{{ item['cron']['job'] | default(omit) }}"
+    minute: "{{ item['cron']['minute'] | default(omit) }}"
+    month: "{{ item['cron']['month'] | default(omit) }}"
+    name: "{{ item['cron']['name'] | default(omit) }}"
+    reboot: "{{ item['cron']['reboot'] | default(omit) }}"
+    special_time: "{{ item['cron']['special_time'] | default(omit) }}"
+    state: "{{ item['cron']['state'] | default(omit) }}"
+    user: "{{ item['cron']['user'] | default(omit) }}"
+    weekday: "{{ item['cron']['weekday'] | default(omit) }}"
+  with_items:
+    - "{{ acme_client_cron_jobs }}"
+
+- name: Include flush_handlers.yml
+  # XXX workaround `[WARNING]: flush_handlers task does not support when
+  # conditional`
+  # https://github.com/ansible/ansible/issues/41313
+  include_tasks: flush_handlers.yml
+  when:
+    - acme_client_flush_handlers

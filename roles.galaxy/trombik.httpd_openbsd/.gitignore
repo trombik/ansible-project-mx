@@ -1,0 +1,7 @@
+/.kitchen/
+.kitchen.local.yml
+*.swp
+.bundle/
+vendor/
+Gemfile.lock
+filter_plugins/oct.pyc

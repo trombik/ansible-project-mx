@@ -1,0 +1,38 @@
+---
+# tasks file for ansible-role-httpd_openbsd
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Assert items in httpd_openbsd_log_directories has mandatory attributes
+  assert:
+    msg: items in httpd_openbsd_log_directories must have `path` and `state`attriutes defined, and `state` attribute must be either `present` or `absent`
+    that:
+      - "'path' in item"
+      - item.path | length > 0
+      - "'state' in item"
+      - (item.state == 'present') or (item.state == 'absent')
+  with_items: "{{ httpd_openbsd_log_directories }}"
+
+- name: Create or remove log directories
+  file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode | oct | default(omit) }}"
+    owner: "{{ item.owner | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    state: "{% if item.state == 'present' %}directory{% else %}{{ item.state }}{% endif %}"
+  with_items: "{{ httpd_openbsd_log_directories }}"
+  notify: Restart httpd_openbsd
+
+- name: Create httpd.conf
+  template:
+    src: httpd.conf.j2
+    dest: "{{ httpd_openbsd_conf_file }}"
+    validate: httpd -n -f %s
+  notify: Restart httpd_openbsd
+
+- name: Start httpd_openbsd
+  service:
+    name: "{{ httpd_openbsd_service }}"
+    state: started

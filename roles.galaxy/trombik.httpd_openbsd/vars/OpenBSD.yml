@@ -1,0 +1,5 @@
+---
+__httpd_openbsd_user: www
+__httpd_openbsd_group: www
+__httpd_openbsd_service: httpd
+__httpd_openbsd_conf_dir: /etc

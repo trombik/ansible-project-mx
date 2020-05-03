@@ -1,0 +1,5 @@
+---
+__acme_client_challengedirs:
+  - /var/www/acme
+__acme_client_conf_dir: /etc
+__acme_client_account_key_dir: /etc/acme
