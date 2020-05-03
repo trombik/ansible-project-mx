@@ -335,3 +335,68 @@ monit_rc:
         restart  program "/usr/sbin/rcctl restart dovecot"
         if failed host localhost port 993 protocol imaps
         then restart
+  httpd:
+    state: present
+    content: |
+      check process httpd matching /usr/sbin/httpd
+        start    program "/usr/sbin/rcctl start   httpd"
+        stop     program "/usr/sbin/rcctl stop    httpd"
+        restart  program "/usr/sbin/rcctl restart httpd"
+        if failed host localhost port 80 protocol http status = 403
+        then restart
+
+# ______________________________________________________acme_client
+acme_client_flags: "-f {{ acme_client_conf_file }}"
+acme_client_domains:
+  - trombik.org
+acme_client_config: |
+  authority letsencrypt {
+    api url "https://acme-v02.api.letsencrypt.org/directory"
+    account key "/etc/acme/letsencrypt-privkey.pem"
+  }
+
+  domain trombik.org {
+      alternative names { www.trombik.org mail.trombik.org }
+      domain key "/etc/ssl/private/example.org.key"
+      domain full chain certificate "/etc/ssl/example.org.fullchain.pem"
+      sign with letsencrypt
+  }
+
+acme_client_cron_jobs:
+  - name: trombik.org
+    cron:
+      name: Check cert for trombik.org
+      hour: 8
+
+      # XXX use `~` here on OpenBSD 6.7
+      minute: 45
+      job: "echo acme-client {{ acme_client_flags }} trombik.org"
+# ______________________________________________________httpd
+
+httpd_openbsd_config: |
+  ext_addr="*"
+  prefork 3
+  # A minimal default server
+  server "default" {
+    listen on $ext_addr port 80
+  }
+  server "trombik.org" {
+    listen on * port 80
+    root "/htdocs"
+    location "/.well-known/acme-challenge/*" {
+      root "/acme"
+      request strip 2
+    }
+  }
+  server "www.trombik.org" {
+    listen on * port 80
+    block return 301 "http://trombik.org$REQUEST_URI"
+  }
+  server "mail.trombik.org" {
+    listen on * port 80
+    block return 301 "http://trombik.org$REQUEST_URI"
+  }
+  # Include MIME types instead of the built-in ones
+  types {
+    include "/usr/share/misc/mime.types"
+  }

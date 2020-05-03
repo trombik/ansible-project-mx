@@ -18,6 +18,8 @@
     - role: trombik.vim
     - role: trombik.git
     - role: create_users
+    - role: trombik.acme_client
+    - role: trombik.httpd_openbsd
     - role: trombik.nsd
     - role: create_extra_groups
     - role: trombik.opensmtpd
