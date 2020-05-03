@@ -2,7 +2,7 @@
 - hosts:
   - mx
   become: yes
-  become_method: "{% if 'virtualbox' in group_names %}sudo{% else %}doas{% endif %}"
+  become_method: sudo
   environment:
     http_proxy: "{{ http_proxy | default() }}"
     https_proxy: "{{ https_proxy | default() }}"
