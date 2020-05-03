@@ -36,8 +36,17 @@ class TestEnvironment
     sh "terraform destroy #{Shellwords.escape(plan_path)}"
   end
 
+  def ask_become_pass_flags
+    if ENV["ANSIBLE_USER"] && ENV["ANSIBLE_USER"] == "ec2-user"
+      ""
+    else
+      "--ask-become-pass"
+    end
+  end
+
   def provision
     sh "ansible-playbook -i #{Shellwords.escape(inventory_path)} " \
+      "#{Shellwords.escape(ask_become_pass_flags)} " \
       "--ssh-common-args '-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' " \
       "--user #{Shellwords.escape(user)} playbooks/site.yml"
   end
