@@ -1,0 +1,32 @@
+---
+_meta:
+  terraform:
+    mx1.trombik.org:
+      ami: ami-04af7ec1b9ea369dd
+      tags:
+        Name: mx1.trombik.org
+        stage: prod
+
+all:
+  hosts:
+  children:
+    mx1.trombik.org:
+      hosts:
+        mx1_trombik_org:
+      vars:
+        ansible_python_interpreter: /usr/local/bin/python3
+    mx:
+      children:
+        mx1.trombik.org:
+
+    prod-mx:
+      children:
+        mx:
+
+    prod-credentials:
+      children:
+        mx:
+
+    prod:
+      children:
+        prod-mx:
