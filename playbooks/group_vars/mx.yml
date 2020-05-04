@@ -368,6 +368,7 @@ project_acme_client_domains:
   - trombik.org
   - www.trombik.org
   - mail.trombik.org
+  - mx.trombik.org
 project_acme_client_cert: /etc/ssl/trombik.org.fullchain.pem
 project_acme_client_key: /etc/ssl/private/trombik.org.key
 acme_client_flags: "-f {{ acme_client_conf_file }}"
@@ -380,7 +381,7 @@ acme_client_config: |
   }
 
   domain trombik.org {
-      alternative names { www.trombik.org mail.trombik.org }
+      alternative names { www.trombik.org mail.trombik.org mx.trombik.org }
       domain key "{{ project_acme_client_key }}"
       domain full chain certificate "{{ project_acme_client_cert }}"
       sign with letsencrypt
@@ -434,6 +435,10 @@ httpd_openbsd_config: |
     block return 301 "http://trombik.org$REQUEST_URI"
   }
   server "mail.trombik.org" {
+    listen on * port 80
+    block return 301 "http://trombik.org$REQUEST_URI"
+  }
+  server "mx.trombik.org" {
     listen on * port 80
     block return 301 "http://trombik.org$REQUEST_URI"
   }
