@@ -62,5 +62,30 @@ inventory.all_hosts_in("mx").each do |server|
         end
       end
     end
+
+    context "when client issues STRATTLS" do
+      let(:starttls) do
+        o = Net::SMTP.new(inventory.host(server)["ansible_host"], 25)
+        # o.esmtp = true
+        o.open_timeout = 30
+        o.read_timeout = 30
+        ctx = OpenSSL::SSL::SSLContext.new
+        ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        o.enable_starttls(ctx)
+        o
+      end
+      let(:to) { "bar@example.net" }
+      before(:each) { starttls.start("localhost") }
+      after(:each) { starttls.finish if smtp.started? }
+
+      context "and from is one of our domain," do
+        let(:from) { "foo@trombik.org" }
+
+        it "rejects message" do
+          expect { starttls.mailfrom(from) }.not_to raise_exception
+          expect { starttls.rcptto(to) }.to raise_exception(Net::SMTPFatalError)
+        end
+      end
+    end
   end
 end
