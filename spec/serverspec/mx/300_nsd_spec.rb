@@ -41,7 +41,7 @@ domains = [
       { name: "cdn", addresses: ["cdn.example.org"] }
     ],
     txt: [
-      { name: "", addresses: %w[foo bar] },
+      { name: "", addresses: %w[foo] },
       { name: "txt", addresses: %w[buz] }
     ],
     vip: vip
