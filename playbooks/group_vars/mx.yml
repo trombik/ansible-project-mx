@@ -123,7 +123,7 @@ opensmtpd_config: |
 
   {% endfor %}
   {% for address in ansible_all_ipv4_addresses + [ "127.0.0.1" ] %}
-  listen on {{ address }} port 25
+  listen on {{ address }} port 25 tls pki {{ ansible_fqdn }}
   listen on {{ address }} port 587 smtps pki {{ ansible_fqdn }} auth <passwd> hostname {{ ansible_fqdn }} received-auth
   {% endfor %}
   action "inbound" lmtp "{{ project_dovecot_unix_socket }}" rcpt-to virtual <virtuals>
