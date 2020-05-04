@@ -12,6 +12,7 @@ RSpec.configure do |config|
   config.filter_run_excluding type: "require_smtp_unblocking" if test_environment == "staging"
 end
 
+tos = credentials_yaml["project_test_users"]
 inventory.all_hosts_in("mx").each do |server|
   describe "smtpd on #{server}", type: :require_smtp_unblocking do
     let(:smtp) do
@@ -42,13 +43,14 @@ inventory.all_hosts_in("mx").each do |server|
       end
     end
 
-    context "when to is a valid address of our domain" do
-      let(:to) { credentials_yaml["project_test_user"]["name"] }
+    context "when to is one of test users" do
       let(:from) { "foo@example.org" }
 
-      it "accepts message" do
-        expect { smtp.mailfrom(from) }.not_to raise_exception
-        expect { smtp.rcptto(to) }.not_to raise_exception
+      tos.each do |to|
+        it "accepts message to #{to['name']}" do
+          expect { smtp.mailfrom(from) }.not_to raise_exception
+          expect { smtp.rcptto(to["name"]) }.not_to raise_exception
+        end
       end
     end
 

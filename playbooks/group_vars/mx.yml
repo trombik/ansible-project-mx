@@ -97,7 +97,7 @@ opensmtpd_tables:
     no_log: no
     values:
       - trombik.org
-      - one.trombik.org
+      - mkrsgh.org
   - name: virtuals
     path: "{{ opensmtpd_conf_dir }}/virtuals"
     type: db

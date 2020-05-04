@@ -13,32 +13,34 @@ inventory.all_hosts_in("mx").each do |server|
       o.enable_tls(ctx)
       o
     end
-    let(:user) { credentials_yaml["project_test_user"]["name"] }
-    let(:password) { credentials_yaml["project_test_user"]["password"] }
+    users = credentials_yaml["project_test_users"]
+    let(:password) { credentials_yaml["project_test_users"]["password"] }
     let(:invalid_user) { "dave.null@trombik.org" }
     let(:invalid_password) { "foobarbuz" }
 
     after(:each) { smtp.finish if smtp.started? }
 
-    context "when SMTP client is authenticated" do
-      before(:each) { smtp.start("localhost", user, password, :plain) }
+    users.each do |user|
+      context "when SMTP client (#{user['name']})is authenticated" do
+        before(:each) { smtp.start("localhost", user["name"], user["password"], :plain) }
 
-      it "accepts message to third-party domain" do
-        expect { smtp.mailfrom(user) }.not_to raise_exception
-        expect { smtp.rcptto("foo@example.org") }.not_to raise_exception
-      end
+        it "accepts message to third-party domain" do
+          expect { smtp.mailfrom(user["name"]) }.not_to raise_exception
+          expect { smtp.rcptto("foo@example.org") }.not_to raise_exception
+        end
 
-      it "accepts message to our domain" do
-        expect { smtp.mailfrom(user) }.not_to raise_exception
-        expect { smtp.rcptto("postmaster@trombik.org") }.not_to raise_exception
-      end
+        it "accepts message to our domain" do
+          expect { smtp.mailfrom(user["name"]) }.not_to raise_exception
+          expect { smtp.rcptto("postmaster@trombik.org") }.not_to raise_exception
+        end
 
-      it "delivers a message to test user" do
-        expect do
-          smtp.send_message "Subject: Test message\n\nHello World",
-                            user,
-                            user
-        end.not_to raise_exception
+        it "delivers a message to test user" do
+          expect do
+            smtp.send_message "Subject: Test message\n\nHello World",
+                              user["name"],
+                              user["name"]
+          end.not_to raise_exception
+        end
       end
     end
 
@@ -46,7 +48,9 @@ inventory.all_hosts_in("mx").each do |server|
       before(:each) { smtp.start("localhost") }
 
       it "raises Net::SMTPAuthenticationError" do
-        expect { smtp.mailfrom(user) }.to raise_exception(Net::SMTPAuthenticationError)
+        users.each do |user|
+          expect { smtp.mailfrom(user["name"]) }.to raise_exception(Net::SMTPAuthenticationError)
+        end
       end
     end
 
