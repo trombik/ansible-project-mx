@@ -22,8 +22,10 @@ describe file "/etc/mail/passwd" do
   it { should be_mode 640 }
   it { should be_owned_by "root" }
   it { should be_grouped_into "vmailauth" }
-  user_name = credentials_yaml["project_test_user"]["name"]
-  its(:content) { should match(/^#{user_name}:\$[0-9a-z]{2}\$[0-9]{2}\$.*::::::$/) }
+  credentials_yaml["project_test_users"].each do |user|
+    user_name = user["name"]
+    its(:content) { should match(/^#{user_name}:\$[0-9a-z]{2}\$[0-9]{2}\$.*::::::$/) }
+  end
 end
 
 describe service "smtpd" do
