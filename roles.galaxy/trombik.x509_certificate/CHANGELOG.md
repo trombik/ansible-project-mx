@@ -1,3 +1,64 @@
+## Release 2.5.0
+
+* b392953 doc: update example
+* 593ef6b feat: support Fedora
+* 3b4a322 ci: update CI
+* c33fc4a update: drop Ubuntu 18.04, add OpenBSD 7.0
+* 8d353f0 ci: add kitchen workflow to CI
+
+## Release 2.4.0
+
+* 6082014 bugfix: update include_role test, fix tests
+* 8fab3eb feature: introduce `x509_certificate_commands`
+
+## Release 2.3.0
+
+* b8a50c9 feature: support `info` cfssl API
+
+## Release 2.2.3
+
+* ecd812f bugfix: support `notify` in x509_cfssl_certificate_newcert
+
+## Release 2.2.2
+
+* 95a4aea bugfix: allow to notify handlers
+
+## Release 2.2.1
+
+* 1a1c17b bugfix: use correct role name in README
+* 1819c5e bugfix: fix a typo in README
+* 80051df bugfix: use canonical prefix for cfssl-related vars
+* 48d427d bugfix: accpet a single variable for all role variables
+
+## Release 2.2.0
+
+* 348705e feature: introduce experimental `x509_cfssl_certificate_newcert`
+
+## Release 2.1.4
+
+* 91270ca bugfix: support Devuan
+* 90461ea bugfix: QA
+* d0c8a5c bugfix: update box versions
+* 22b788f bugfix: add publish action
+
+## Release 2.1.3
+
+* ade5c4a bugfix: fix unquoted argument for `default`
+
+## Release 2.1.2
+
+* 1312ae1 ci: add Github Actions workflows
+* e5ec3ca bugfix: QA
+* 90e4985 bugfix: add a test case for state: absent
+* 616b54c [bugfix] fixed wrong fileending
+* e8a6f3d [bugfix] fixed wrong variable
+
+## Release 2.1.1
+
+* 960a941 bugfix: QA
+* e297c15 bugfix: update boxes
+* 1b2fc93 bugfix: remove with_items from package modules
+
 ## Release 2.1.0
 
 * cb2577b bugfix: s/python/python3/ on OpenBSD 6.5

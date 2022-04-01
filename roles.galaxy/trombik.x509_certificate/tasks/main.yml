@@ -1,20 +1,30 @@
 ---
 # tasks file for ansible-role-x509_certificate
 
-- include_vars: "{{ ansible_os_family }}.yml"
+- name: "Include variables from {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
 
-- include_tasks: "install-{{ ansible_os_family }}.yml"
+- name: Do workaround ansible issues 19084
+  # See https://github.com/ansible/ansible/issues/19084
+  set_fact: {"{{ item.key }}": "{{ item.value }}"}
+  with_dict: "{{ x509_certificate_vars }}"
+  when: x509_certificate_vars is defined
 
-- set_fact:
+- name: "Include tasks install-{{ ansible_os_family }}.yml"
+  include_tasks: "install-{{ ansible_os_family }}.yml"
+
+- name: Set x509_certificate_present fact
+  ansible.builtin.set_fact:
     x509_certificate_present: "{{ x509_certificate | selectattr('state', 'match', '^present$') | list }}"
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
 
-- set_fact:
+- name: Set x509_certificate_absent fact
+  ansible.builtin.set_fact:
     x509_certificate_absent: "{{ x509_certificate | selectattr('state', 'match', '^absent$') | list }}"
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
 
 - name: Create x509_certificate_dir
-  file:
+  ansible.builtin.file:
     path: "{{ x509_certificate_dir }}"
     mode: 0755
     owner: "{{ x509_certificate_default_owner }}"
@@ -23,7 +33,7 @@
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
 
 - name: Create directories for pub keys
-  file:
+  ansible.builtin.file:
     path: "{{ item.public.path | dirname }}"
     mode: 0755
     state: directory
@@ -34,7 +44,7 @@
     - item.public.path | length > 0
 
 - name: Create directories for secret keys
-  file:
+  ansible.builtin.file:
     path: "{{ item.secret.path | dirname }}"
     mode: 0755
     state: directory
@@ -46,45 +56,223 @@
     - item.secret.path | length > 0
 
 - name: Create public keys
-  template:
+  ansible.builtin.template:
     src: pem.j2
     dest: "{{ item.public.path | default(x509_certificate_dir + '/' + item.name + '.pem') }}"
     owner: "{{ item.public.owner | default(x509_certificate_default_owner) }}"
     group: "{{ item.public.group | default(x509_certificate_default_group) }}"
-    mode: "{{ item.public.mode | default(0444) }}"
+    mode: "{{ item.public.mode | default('0444') }}"
     validate: "{{ x509_certificate_validate_command_public[x509_certificate_validate_command] }}"
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
   with_items: "{{ x509_certificate_present }}"
   when:
     - "'public' in item"
+  notify: "{{ item['public']['notify'] | default(omit) }}"
 
 - name: Create secret keys
-  template:
+  ansible.builtin.template:
     src: key.j2
     dest: "{{ item.secret.path | default(x509_certificate_dir + '/' + item.name + '.key') }}"
     owner: "{{ item.secret.owner | default(x509_certificate_default_owner) }}"
     group: "{{ item.secret.group | default(x509_certificate_default_group) }}"
-    mode: "{{ item.secret.mode | default(0400) }}"
+    mode: "{{ item.secret.mode | default('0400') }}"
     validate: "{{ x509_certificate_validate_command_secret[x509_certificate_validate_command] }}"
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
   with_items: "{{ x509_certificate_present }}"
   when:
     - "'secret' in item"
+  notify: "{{ item['secret']['notify'] | default(omit) }}"
 
 - name: Remove public keys
-  file:
-    path: "{{ item.public.path | default(x509_certificate_present + '/' + item.name + '.pub') }}"
+  ansible.builtin.file:
+    path: "{{ item.public.path | default(x509_certificate_dir + '/' + item.name + '.pem') }}"
     state: absent
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
   with_items: "{{ x509_certificate_absent }}"
   when:
     - "'public' in item"
+  notify: "{{ item['public']['notify'] | default(omit) }}"
 
 - name: Remove secret keys
-  file:
-    path: "{{ item.secret.path | default(x509_certificate_present + '/' + item.name + '.pub') }}"
+  ansible.builtin.file:
+    path: "{{ item.secret.path | default(x509_certificate_dir + '/' + item.name + '.key') }}"
     state: absent
   no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
   with_items: "{{ x509_certificate_absent }}"
   when:
     - "'secret' in item"
+  notify: "{{ item['secret']['notify'] | default(omit) }}"
+
+- name: Do request newcert (x509_certificate_cfssl_certificate_newcert)
+  ansible.builtin.uri:
+    attributes: "{{ x509_certificate_cfssl_uri_param['attributes'] | default(omit) }}"
+    body: "{{ item['body'] | to_json }}"
+    body_format: "{{ x509_certificate_cfssl_uri_param['body_format'] | default('json') }}"
+    ca_path: "{{ x509_certificate_cfssl_uri_param['ca_path'] | default(omit) }}"
+    client_cert: "{{ x509_certificate_cfssl_uri_param['client_cert'] | default(omit) }}"
+    client_key: "{{ x509_certificate_cfssl_uri_param['client_key'] | default(omit) }}"
+    creates: "{{ item['public']['path'] }}"
+    dest: "{{ x509_certificate_cfssl_uri_param['dest'] | default(omit) }}"
+    follow_redirects: "{{ x509_certificate_cfssl_uri_param['follow_redirects'] | default(omit) }}"
+    force: "{{ x509_certificate_cfssl_uri_param['force'] | default(omit) }}"
+    force_basic_auth: "{{ x509_certificate_cfssl_uri_param['force_basic_auth'] | default(omit) }}"
+    group: "{{ x509_certificate_cfssl_uri_param['group'] | default(omit) }}"
+    headers: "{{ x509_certificate_cfssl_uri_param['headers'] | default(omit) }}"
+    http_agent: "{{ x509_certificate_cfssl_uri_param['http_agent'] | default(omit) }}"
+    method: "{{ x509_certificate_cfssl_uri_param['method'] | default('POST') }}"
+    mode: "{{ x509_certificate_cfssl_uri_param['mode'] | default(omit) }}"
+    owner: "{{ x509_certificate_cfssl_uri_param['owner'] | default(omit) }}"
+    remote_src: "{{ x509_certificate_cfssl_uri_param['remote_src'] | default(omit) }}"
+    removes: "{{ x509_certificate_cfssl_uri_param['removes'] | default(omit) }}"
+    return_content: "{{ x509_certificate_cfssl_uri_param['return_content'] | default(omit) }}"
+    selevel: "{{ x509_certificate_cfssl_uri_param['selevel'] | default(omit) }}"
+    serole: "{{ x509_certificate_cfssl_uri_param['serole'] | default(omit) }}"
+    setype: "{{ x509_certificate_cfssl_uri_param['setype'] | default(omit) }}"
+    seuser: "{{ x509_certificate_cfssl_uri_param['seuser'] | default(omit) }}"
+    src: "{{ x509_certificate_cfssl_uri_param['src'] | default(omit) }}"
+    status_code: "{{ x509_certificate_cfssl_uri_param['status_code'] | default(omit) }}"
+    timeout: "{{ x509_certificate_cfssl_uri_param['timeout'] | default(omit) }}"
+    unix_socket: "{{ x509_certificate_cfssl_uri_param['unix_socket'] | default(omit) }}"
+    url: "{{ x509_certificate_cfssl_scheme }}://{{ x509_certificate_cfssl_host }}:{{ x509_certificate_cfssl_port }}{{ x509_certificate_cfssl_endpoint_base_path }}/newcert"
+    url_password: "{{ x509_certificate_cfssl_uri_param['url_password'] | default(omit) }}"
+    url_username: "{{ x509_certificate_cfssl_uri_param['url_username'] | default(omit) }}"
+    use_gssapi: "{{ x509_certificate_cfssl_uri_param['use_gssapi'] | default(omit) }}"
+    use_proxy: "{{ x509_certificate_cfssl_uri_param['use_proxy'] | default(omit) }}"
+    validate_certs: "{{ x509_certificate_cfssl_uri_param['validate_certs'] | default(omit) }}"
+  delay: "{{ x509_certificate_cfssl_delay }}"
+  retries: "{{ x509_certificate_cfssl_retries }}"
+  with_items: "{{ x509_certificate_cfssl_certificate_newcert }}"
+  register: __register_x509_certificate_cfssl_certificate_newcert
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+
+- name: Create combined key
+  ansible.builtin.copy:
+    content: "{{ item['json']['result']['certificate'] + item['json']['result']['private_key'] }}"
+    dest: "{{ item[ansible_loop_var]['combined']['path'] }}"
+    owner: "{{ item[ansible_loop_var]['combined']['owner'] }}"
+    group: "{{ item[ansible_loop_var]['combined']['group'] }}"
+    mode: "{{ item[ansible_loop_var]['combined']['mode'] }}"
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+  with_items: "{{ __register_x509_certificate_cfssl_certificate_newcert['results'] }}"
+  when:
+    - "'json' in item"
+    - item['json']['success']
+    # only if specified
+    - "'combined' in item[ansible_loop_var]"
+  notify: "{{ item[ansible_loop_var]['combined']['notify'] | default(omit) }}"
+
+- name: Create private key
+  ansible.builtin.copy:
+    content: "{{ item['json']['result']['private_key'] }}"
+    dest: "{{ item[ansible_loop_var]['private']['path'] }}"
+    owner: "{{ item[ansible_loop_var]['private']['owner'] }}"
+    group: "{{ item[ansible_loop_var]['private']['group'] }}"
+    mode: "{{ item[ansible_loop_var]['private']['mode'] }}"
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+  with_items: "{{ __register_x509_certificate_cfssl_certificate_newcert['results'] }}"
+  when:
+    # HTTP request was success
+    - "'json' in item"
+    # API request was success
+    - item['json']['success']
+  notify: "{{ item[ansible_loop_var]['private']['notify'] | default(omit) }}"
+
+- name: Create CSR
+  ansible.builtin.copy:
+    content: "{{ item['json']['result']['certificate_request'] }}"
+    dest: "{{ item[ansible_loop_var]['csr']['path'] }}"
+    owner: "{{ item[ansible_loop_var]['csr']['owner'] }}"
+    group: "{{ item[ansible_loop_var]['csr']['group'] }}"
+    mode: "{{ item[ansible_loop_var]['csr']['mode'] }}"
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+  with_items: "{{ __register_x509_certificate_cfssl_certificate_newcert['results'] }}"
+  when:
+    - "'json' in item"
+    - item['json']['success']
+  notify: "{{ item[ansible_loop_var]['csr']['notify'] | default(omit) }}"
+
+- name: Create public key
+  ansible.builtin.copy:
+    content: "{{ item['json']['result']['certificate'] }}"
+    dest: "{{ item[ansible_loop_var]['public']['path'] }}"
+    owner: "{{ item[ansible_loop_var]['public']['owner'] }}"
+    group: "{{ item[ansible_loop_var]['public']['group'] }}"
+    mode: "{{ item[ansible_loop_var]['public']['mode'] }}"
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+  with_items: "{{ __register_x509_certificate_cfssl_certificate_newcert['results'] }}"
+  when:
+    - "'json' in item"
+    - item['json']['success']
+  notify: "{{ item[ansible_loop_var]['public']['notify'] | default(omit) }}"
+
+- name: Get x509_certificate_cfssl_info
+  ansible.builtin.uri:
+    attributes: "{{ x509_certificate_cfssl_uri_param['attributes'] | default(omit) }}"
+    body: "{{ item['body'] | to_json }}"
+    body_format: "{{ x509_certificate_cfssl_uri_param['body_format'] | default('json') }}"
+    ca_path: "{{ x509_certificate_cfssl_uri_param['ca_path'] | default(omit) }}"
+    client_cert: "{{ x509_certificate_cfssl_uri_param['client_cert'] | default(omit) }}"
+    client_key: "{{ x509_certificate_cfssl_uri_param['client_key'] | default(omit) }}"
+    creates: "{{ item['path'] }}"
+    dest: "{{ x509_certificate_cfssl_uri_param['dest'] | default(omit) }}"
+    follow_redirects: "{{ x509_certificate_cfssl_uri_param['follow_redirects'] | default(omit) }}"
+    force: "{{ x509_certificate_cfssl_uri_param['force'] | default(omit) }}"
+    force_basic_auth: "{{ x509_certificate_cfssl_uri_param['force_basic_auth'] | default(omit) }}"
+    group: "{{ x509_certificate_cfssl_uri_param['group'] | default(omit) }}"
+    headers: "{{ x509_certificate_cfssl_uri_param['headers'] | default(omit) }}"
+    http_agent: "{{ x509_certificate_cfssl_uri_param['http_agent'] | default(omit) }}"
+    method: "{{ x509_certificate_cfssl_uri_param['method'] | default('POST') }}"
+    mode: "{{ x509_certificate_cfssl_uri_param['mode'] | default(omit) }}"
+    owner: "{{ x509_certificate_cfssl_uri_param['owner'] | default(omit) }}"
+    remote_src: "{{ x509_certificate_cfssl_uri_param['remote_src'] | default(omit) }}"
+    removes: "{{ x509_certificate_cfssl_uri_param['removes'] | default(omit) }}"
+    return_content: "{{ x509_certificate_cfssl_uri_param['return_content'] | default(omit) }}"
+    selevel: "{{ x509_certificate_cfssl_uri_param['selevel'] | default(omit) }}"
+    serole: "{{ x509_certificate_cfssl_uri_param['serole'] | default(omit) }}"
+    setype: "{{ x509_certificate_cfssl_uri_param['setype'] | default(omit) }}"
+    seuser: "{{ x509_certificate_cfssl_uri_param['seuser'] | default(omit) }}"
+    src: "{{ x509_certificate_cfssl_uri_param['src'] | default(omit) }}"
+    status_code: "{{ x509_certificate_cfssl_uri_param['status_code'] | default(omit) }}"
+    timeout: "{{ x509_certificate_cfssl_uri_param['timeout'] | default(omit) }}"
+    unix_socket: "{{ x509_certificate_cfssl_uri_param['unix_socket'] | default(omit) }}"
+    url: "{{ x509_certificate_cfssl_scheme }}://{{ x509_certificate_cfssl_host }}:{{ x509_certificate_cfssl_port }}{{ x509_certificate_cfssl_endpoint_base_path }}/info"
+    url_password: "{{ x509_certificate_cfssl_uri_param['url_password'] | default(omit) }}"
+    url_username: "{{ x509_certificate_cfssl_uri_param['url_username'] | default(omit) }}"
+    use_gssapi: "{{ x509_certificate_cfssl_uri_param['use_gssapi'] | default(omit) }}"
+    use_proxy: "{{ x509_certificate_cfssl_uri_param['use_proxy'] | default(omit) }}"
+    validate_certs: "{{ x509_certificate_cfssl_uri_param['validate_certs'] | default(omit) }}"
+  delay: "{{ x509_certificate_cfssl_delay }}"
+  retries: "{{ x509_certificate_cfssl_retries }}"
+  with_items: "{{ x509_certificate_cfssl_info }}"
+  register: __register_x509_certificate_cfssl_info
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+
+- name: Create x509_certificate_cfssl_info
+  ansible.builtin.copy:
+    content: "{{ item['json']['result']['certificate'] }}"
+    dest: "{{ item[ansible_loop_var]['path'] }}"
+    owner: "{{ item[ansible_loop_var]['owner'] | default(x509_certificate_default_owner) }}"
+    group: "{{ item[ansible_loop_var]['group'] | default(x509_certificate_default_group) }}"
+    mode: "{{ item[ansible_loop_var]['public']['mode'] | default('0644') }}"
+  no_log: "{% if x509_certificate_debug_log %}no{% else %}yes{% endif %}"
+  with_items: "{{ __register_x509_certificate_cfssl_info['results'] }}"
+  when:
+    - "'json' in item"
+    - item['json']['success']
+  notify: "{{ item[ansible_loop_var]['notify'] | default('Update root CA store') }}"
+
+- name: Run x509_certificate_commands
+  command: "{{ item['cmd'] }}"
+  args:
+    creates: "{{ item['creates'] }}"
+  with_items: "{{ x509_certificate_commands }}"
+  notify: "{{ item['notify'] | default(omit) }}"
+
+- name: Ensure file owner, group, and mode on files created by x509_certificate_commands
+  ansible.builtin.file:
+    path: "{{ item['creates'] }}"
+    owner: "{{ item['owner'] | default(omit) }}"
+    group: "{{ item['group'] | default(omit) }}"
+    mode: "{{ item['mode'] | default(omit) }}"
+    state: file
+  with_items: "{{ x509_certificate_commands }}"
