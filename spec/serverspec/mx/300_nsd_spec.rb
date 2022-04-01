@@ -91,7 +91,7 @@ domains.each do |domain|
   describe command("#{dig_command} @127.0.0.1 ns #{domain[:name]}. +norec") do
     its(:exit_status) { should eq 0 }
     its(:stderr) { should eq "" }
-    its(:stdout) { should match(/^;; flags: qr aa; QUERY: 1, ANSWER: #{domain[:ns].length}, AUTHORITY: 0, ADDITIONAL: #{domain[:ns].length}$/) }
+    its(:stdout) { should match(/^;; flags: qr aa; QUERY: 1, ANSWER: #{domain[:ns].length}, AUTHORITY: 0, ADDITIONAL: \d+$/) }
     domain[:ns].each do |ns|
       its(:stdout) { should match(/^#{ns}.\s+\d+\s+IN\s+A\s+\d+/) }
     end
@@ -101,7 +101,7 @@ domains.each do |domain|
     its(:exit_status) { should eq 0 }
     its(:stderr) { should eq "" }
     unless domain[:mx].empty?
-      its(:stdout) { should match(/^;; flags: qr aa; QUERY: 1, ANSWER: #{domain[:mx].length}, AUTHORITY: #{domain[:ns].length}, ADDITIONAL: #{domain[:mx].length + domain[:ns].length}$/) }
+      its(:stdout) { should match(/^;; flags: qr aa; QUERY: 1, ANSWER: #{domain[:mx].length}, AUTHORITY: #{domain[:ns].length}, ADDITIONAL: \d+$/) }
       domain[:mx].each do |mx|
         its(:stdout) { should match(/^#{domain[:name]}.\s+\d+\s+IN\s+MX\s+#{mx[:prio]}\s+#{mx[:name]}\./) }
       end
