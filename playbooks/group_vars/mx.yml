@@ -186,8 +186,8 @@ dovecot_config_fragments:
       service lmtp {
         unix_listener {{ project_dovecot_unix_socket }} {
           user = {{ opensmtpd_virtual_user.name }}
-          group = {{ opensmtpd_virtual_user.group }}
-          mode = 0600
+          group = {{ opensmtpd_group }}
+          mode = 0660
         }
       }
 
