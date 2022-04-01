@@ -4,7 +4,7 @@ all:
     mx:
       hosts:
         mx1.trombik.org:
-          ansible_host: 172.16.100.100
+          ansible_host: 192.168.56.100
           vagrant_priority: 10
     ungrouped: {}
     virtualbox:
