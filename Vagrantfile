@@ -78,7 +78,7 @@ Vagrant.configure("2") do |config|
       v.cpus = 1
     end
     config.vm.box_check_update = false
-    default_box = "trombik/ansible-openbsd-6.6-amd64"
+    default_box = "trombik/ansible-openbsd-7.0-amd64"
     hostname_by_priority = inventory["all"]["hosts"].keys.sort do |a, b|
       inventory["all"]["hosts"][b]["vagrant_priority"] <=> inventory["all"]["hosts"][a]["vagrant_priority"]
     end
