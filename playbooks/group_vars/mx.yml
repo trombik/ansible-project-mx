@@ -301,7 +301,7 @@ monit_scripts:
   - name: check_nsd_ns.sh
     content: |
       #!/bin/sh
-      /usr/sbin/dig @127.0.0.1 trombik.org ns +short +norec | grep -E 'trombik\.org\.$'
+      dig @127.0.0.1 trombik.org ns +short +norec | grep -E 'trombik\.org\.$'
 
 monit_rc:
   sshd:
