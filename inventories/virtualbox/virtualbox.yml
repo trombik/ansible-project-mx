@@ -3,7 +3,7 @@ all:
   hosts:
     mx1.trombik.org:
       vagrant_priority: 10
-      ansible_host: 192.168.56.100
+      ansible_host: 192.168.56.101
   children:
     mx:
       hosts:
